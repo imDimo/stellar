@@ -2,11 +2,14 @@ use bevy::prelude::*;
 mod core;
 
 fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins) 
-        .add_systems(Startup, (add_ship))
-        .add_systems(Update, list_ship_name)
-        .run();
+
+    core::navigation::test();
+
+    // App::new()
+    //     .add_plugins(DefaultPlugins) 
+    //     .add_systems(Startup, (add_ship))
+    //     .add_systems(Update, list_ship_name)
+    //     .run();
 
     
 }
