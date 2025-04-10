@@ -1,26 +1,17 @@
 use bevy::prelude::*;
-mod core;
+
+mod stellar_core;
+mod init;
+mod update;
+mod draw;
 
 fn main() {
 
-    core::navigation::test();
-
-    // App::new()
-    //     .add_plugins(DefaultPlugins) 
-    //     .add_systems(Startup, (add_ship))
-    //     .add_systems(Update, list_ship_name)
-    //     .run();
-
-    
+     App::new()
+         .add_plugins(DefaultPlugins) 
+         .add_systems(Startup, (init::add_ship, init::create_solar_system, init::create_camera))
+         .add_systems(Update, (update::update_ship, update::camera_movement))
+         .add_systems(Update, (draw::draw_ship, draw::draw_solar_system))
+         .run();
 }
 
-fn add_ship(mut commands: Commands) {
-    println!("Adding ship");
-    commands.spawn((core::ship::Ship, core::Name("USS Ligma".to_string())));
-}
-
-fn list_ship_name(query: Query<&core::Name, With<core::ship::Ship>>) {
-    for name in &query {
-        println!("Ship: {0}", name.0);
-    }
-}

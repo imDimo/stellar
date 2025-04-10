@@ -310,6 +310,7 @@ version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2eaad7fe854258047680c51c3cacb804468553c04241912f6254c841c67c0198"
 dependencies = [
+ "bevy_dylib",
  "bevy_internal",
 ]
 
@@ -526,6 +527,15 @@ dependencies = [
  "bevy_utils",
  "const-fnv1a-hash",
  "sysinfo",
+]
+
+[[package]]
+name = "bevy_dylib"
+version = "0.15.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "381b2a0773cfe9d27256fba1e5005a14968b34f751c09397ee4e278f0fb235db"
+dependencies = [
+ "bevy_internal",
 ]
 
 [[package]]
@@ -3695,6 +3705,7 @@ name = "stellar"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "vector2d",
 ]
 
 [[package]]
@@ -4036,6 +4047,12 @@ name = "vec_map"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
+
+[[package]]
+name = "vector2d"
+version = "3.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "567b2fa9c7ae37b0c180cdda3aebed26cbbd81344bcfeedd7650eeb8088b5a7b"
 
 [[package]]
 name = "version_check"
