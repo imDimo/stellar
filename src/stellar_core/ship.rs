@@ -8,7 +8,7 @@ pub struct Ship {
 
 impl Ship {
     pub fn new() -> Ship {
-        Ship { position: Vec2::new(100.0, 500.0), velocity: Vec2::new(0.0, 0.0) }
+        Ship { position: Vec2::new(100.0, -200.0), velocity: Vec2::new(0.0, 0.0) }
     }
 
     pub fn to_string(&self) -> String {
