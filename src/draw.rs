@@ -5,8 +5,9 @@ use crate::stellar_core;
 pub fn draw_ship(ship: Single<&mut stellar_core::ship::Ship>, mut gizmos: Gizmos) {
     gizmos.arrow_2d(
         ship.position,
-         ship.position + ship.velocity * 50.,
+         ship.position + ship.velocity * 25.,
           WHITE);
+
 }
 
 pub fn draw_solar_system(bodies: Query<&mut stellar_core::celestial_body::CelestialBody>, mut gizmos: Gizmos) {
