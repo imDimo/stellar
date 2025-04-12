@@ -1,13 +1,16 @@
 use bevy::prelude::*;
 
+pub struct CelestialPlugin;
+impl Plugin for CelestialPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_systems(Startup, setup_camera)
+            .add_systems(Update, update_camera);
+    }
+}
+
 #[derive(Clone, Component, Debug)]
 pub struct CelestialBody {
     pub mass: f32,
     pub position: Vec2
-}
-
-impl std::fmt::Display for CelestialBody {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{0}, ({1}, {2})", self.mass, self.position.x, self.position.y)
-    }   
 }

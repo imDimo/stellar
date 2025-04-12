@@ -21,6 +21,6 @@ pub fn calculate_acceleration(position: &Vec2, bodies: &Vec<&CelestialBody>) -> 
             accel = accel + Vec2::new(accel_magnitude * dv.x / distance, accel_magnitude * dv.y / distance);
         }
     }
-    //println!("{accel}");
+
     return accel;
 }
