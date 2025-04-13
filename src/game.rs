@@ -10,6 +10,7 @@ impl Plugin for GamePlugin {
                 (
                     camera::CameraPlugin,
                     ship::ShipPlugin,
+                    celestial_body::SolarPlugin,
                 )
             )
             .add_systems(Startup, setup_scene);

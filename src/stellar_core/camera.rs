@@ -1,4 +1,4 @@
-use bevy::{input::mouse::MouseWheel, prelude::*};
+use bevy::{input::mouse::*, prelude::*};
 
 pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
@@ -16,7 +16,9 @@ fn setup_camera(mut commands: Commands) {
 fn update_camera(
     mut camera_query: Query<&mut Transform, With<Camera2d>>, 
     input: Res<ButtonInput<KeyCode>>, 
-    mut evr_scroll: EventReader<MouseWheel>
+    mut evr_scroll: EventReader<MouseWheel>,
+    mut evr_motion: EventReader<MouseMotion>,
+    buttons: Res<ButtonInput<MouseButton>>,
 ) {
     let mut transform = camera_query.single_mut();
     let mut direction = Vec3::ZERO;
@@ -29,6 +31,12 @@ fn update_camera(
 
     for ev in evr_scroll.read() {
         zoom *= 1.0 - ev.y / 10.0;
+    }
+
+    for ev in evr_motion.read() {
+        if buttons.pressed(MouseButton::Left) {
+            direction -= Vec3 {x: ev.delta.x / 8.0, y: -ev.delta.y / 8.0, z: direction.z };
+        }
     }
 
     transform.translation += direction * zoom * 5.0;
