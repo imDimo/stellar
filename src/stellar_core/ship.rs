@@ -37,11 +37,12 @@ fn update_ship(
 
     let angle = (transform.translation.xy()).angle_to(transform.translation.xy() + new_velocity);
 
+    transform.rotate_z(angle);
+
     transform.translation.x += new_velocity.x;
     transform.translation.y += new_velocity.y;
 
-    //transform.rotate_z(angle.abs());
-    println!("{0}", angle.abs());
+    //println!("{0}", angle.abs());
 
     ship.velocity = new_velocity;
 }
