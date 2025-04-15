@@ -1,7 +1,5 @@
 
 use bevy::prelude::*;
-use bevy::color::palettes::basic as COLOR;
-
 use crate::procedural_generation::planet as gen;
 
 pub struct SolarPlugin;

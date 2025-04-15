@@ -4,6 +4,7 @@ use crate::stellar_core;
 pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
+        //build plugin & add systems
         app
             .add_systems(Startup, setup_camera)
             .add_systems(Update, update_camera);
@@ -22,16 +23,21 @@ fn update_camera(
     let mut transform = camera_query.single_mut();
     let mut zoom: f32 = transform.scale.y;
 
+    //iterate through scroll events
     for ev in evr_scroll.read() {
         zoom *= 1.0 - ev.y / 10.0;
     }
 
+    //set camera position to ship position.
     transform.translation = ship_query.single().translation;
+    //apply scale
     transform.scale = Vec3 { x: zoom, y: zoom, z: zoom };
 
-    ship_query.single_mut().scale = transform.scale * 3.0;
+    //set ship scale to something relative so that it scales with zoom
+    ship_query.single_mut().scale = (transform.scale + 1.0) * 3.0;
 }
 
+//freecam function
 #[allow(dead_code)]
 fn update_free_camera(
     mut camera_query: Query<&mut Transform, With<Camera2d>>, 
@@ -49,16 +55,19 @@ fn update_free_camera(
     if input.pressed(KeyCode::ArrowLeft) { direction.x -= 1.0; }
     if input.pressed(KeyCode::ArrowRight) { direction.x += 1.0; }
 
+    //scroll wheel zoom
     for ev in evr_scroll.read() {
         zoom *= 1.0 - ev.y / 10.0;
     }
 
+    //mouse drag to move camera. cheap & easy solution
     for ev in evr_motion.read() {
         if buttons.pressed(MouseButton::Left) {
             direction -= Vec3 {x: ev.delta.x / 8.0, y: -ev.delta.y / 8.0, z: direction.z };
         }
     }
 
+    //apply translation and scale
     transform.translation += direction * zoom * 5.0;
     transform.scale = Vec3 { x: zoom, y: zoom, z: zoom };
 

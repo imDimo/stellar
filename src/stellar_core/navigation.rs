@@ -34,3 +34,8 @@ pub fn acceleration(pos1: &Vec2, pos2: &Vec2, mass: f32, radius: f32) -> Vec2 {
 
     return acceleration;
 }
+
+//linear interpolation
+pub fn lerp(start: f32, end: f32, speed: f32) -> f32 {
+    (end - start) / speed + start
+}

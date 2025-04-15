@@ -9,7 +9,7 @@ pub fn get_star_properties(mass: f32, age: f32, metallicity: f32) -> (f32, f32, 
         x if (0.0..0.9).contains(&x) => get_main_sequence_properties(mass, age, metallicity),
         x if (0.9..1.0).contains(&x) => get_giant_properties(mass, age, metallicity),
         x if x > 1.0 => get_remnant_properties(mass, age, metallicity),
-        _ => get_main_sequence_properties(mass, age, metallicity)
+        _ => get_main_sequence_properties(mass, age, metallicity) //lol idk, fallback?
     }
 }
 

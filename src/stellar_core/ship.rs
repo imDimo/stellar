@@ -1,12 +1,16 @@
 use bevy::prelude::*;
 use crate::stellar_core;
 
+mod thruster;
+use crate::stellar_core::ship::thruster::EngineFlame as EngineFlame;
+
 pub struct ShipPlugin;
 impl Plugin for ShipPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Startup, setup_ship)
             .add_systems(Update, update_ship)
+            .add_systems(Update, stellar_core::ship::thruster::update_thrusters)
             .add_systems(Update, ship_controls);
     }
 }
@@ -16,41 +20,57 @@ pub struct Ship {
     pub velocity: Vec2
 }
 
-#[derive(Component)]
-pub struct ShipEngine {
-
-}
-
 fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
+    //load textures
     let ship_image: Handle<Image> = asset_server.load("ship.png");
     let engine_flame: Handle<Image> = asset_server.load("engine_flame.png");
 
+    //assemble the ship
     commands.spawn((
         Ship { velocity: Vec2 {x: 0.0, y: 0.1 }},
         Sprite { image: ship_image, custom_size: Some(Vec2::splat(8.)), ..default() },
         Transform::from_xyz(0.0, 0.0, 1.0)
     ))
-    .with_child((
-        ShipEngine {},
-        Sprite { image: engine_flame, custom_size: Some(Vec2::splat(6.0)), ..default() },
-        Transform::from_xyz(0.0, -12.0, 0.0).with_scale(Vec3 { x: 0.8, y: 2.0, z: 1.0 })
-    ));
+    .with_child( //the engine flame is a child because it allows custom placement of the plume
+        thruster::get_thruster_bundle(&engine_flame, 0,
+            Transform::from_xyz(0.0, -6.0, 0.0)
+            .with_rotation(Quat::from_rotation_z(0.0))
+            .with_scale(Vec3 { x: 0.8, y: 4.0, z: 1.0 })
+    ))
+    .with_child(
+        thruster::get_thruster_bundle(&engine_flame, 1,
+            Transform::from_xyz(3.0, 2.0, 0.0)
+            .with_rotation(Quat::from_rotation_z(2.5))
+            .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
+    ))
+    .with_child(
+        thruster::get_thruster_bundle(&engine_flame, 1,
+            Transform::from_xyz(-3.0, 2.0, 0.0)
+            .with_rotation(Quat::from_rotation_z(-2.5))
+            .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
+    ))
+    ;
 }
 
+//process gravity for the ship
 fn update_ship(
     mut ship_query: Query<(&mut stellar_core::ship::Ship, &mut Transform)>, 
     bodies_query: Query<(&stellar_core::celestial_body::CelestialBody, &Transform), Without<stellar_core::ship::Ship>>
 ) {
+    //unpack and error handle the tuple
+    //this pattern isnt exactly necessary but its okay
     let Ok((mut ship, mut transform)) = ship_query.get_single_mut() else {
         return;
     };
 
+    //calculate the velocity gravitational attraction produces at this point in space
     let new_velocity = 
-        stellar_core::navigation::calculate_acceleration(
-            &transform.translation.xy(), &bodies_query.iter().collect()) + ship.velocity;
+        stellar_core::navigation::calculate_acceleration(&transform.translation.xy(), &bodies_query.iter().collect())
+             + ship.velocity; //and add it to the current velocity
 
+    //normalize this value for angle calculation
     let direction = new_velocity.normalize_or_zero();
-    let angle = direction.y.atan2(direction.x) - 0.5 * std::f32::consts::PI;
+    let angle = direction.y.atan2(direction.x) - 0.5 * std::f32::consts::PI; //rotate it by 90 degrees
 
     transform.rotation = Quat::from_rotation_z(angle);
 
@@ -62,36 +82,36 @@ fn update_ship(
 
 fn ship_controls(
     buttons: Res<ButtonInput<MouseButton>>,
-    mut engine_query: Query<&mut Transform, With<ShipEngine>>,
+    mut engines: Query<&mut EngineFlame>,
     q_windows: Query<&Window, With<bevy::window::PrimaryWindow>>
 ) {
-
-    let Ok(mut engine_transform) = engine_query.get_single_mut() else { return; };
-
     if buttons.pressed(MouseButton::Left) {
-        let new_scale_y = lerp(engine_transform.scale.y, 2.0);
-        let scale_delta = new_scale_y - engine_transform.scale.y;
-        engine_transform.scale.y = new_scale_y;
-    
-        // Move up by half of the scale delta to keep the top fixed
-        engine_transform.translation.y -= scale_delta * 3.0; // Half of 6.0 (sprite height)    
-        let new_scale_y = lerp(engine_transform.scale.y, 2.0);
-        let scale_delta = new_scale_y - engine_transform.scale.y;
-        engine_transform.scale.y = new_scale_y;
-    
-        // Move up by half of the scale delta to keep the top fixed
-        engine_transform.translation.y -= scale_delta * 3.0; // Half of 6.0 (sprite height)
+        engines.iter_mut().for_each(|mut e| {
+            if e.id == 0 {
+                e.active = true;
+            }
+        });
     }
     else {
-        let new_scale_y = lerp(engine_transform.scale.y, 0.0);
-        let scale_delta = engine_transform.scale.y - new_scale_y;
-        engine_transform.scale.y = new_scale_y;
-    
-        // Move down by half of the scale delta
-        engine_transform.translation.y += scale_delta * 3.0;
+        engines.iter_mut().for_each(|mut e| {
+            if e.id == 0 {
+                e.active = false;
+            }
+        });
     }
-}
 
-fn lerp(start: f32, end: f32) -> f32 {
-    (end - start) / 4.0 + start
+    if buttons.pressed(MouseButton::Right) {
+        engines.iter_mut().for_each(|mut e| {
+            if e.id == 1 {
+                e.active = true;
+            }
+        });
+    }
+    else {
+        engines.iter_mut().for_each(|mut e| {
+            if e.id == 1 {
+                e.active = false;
+            }
+        });
+    }
 }
