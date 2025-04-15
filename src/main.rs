@@ -6,6 +6,7 @@ mod game;
 
 fn main() {
     
+    procedural_generation::planet::test_planet();
 
     App::new()
         .add_plugins((
@@ -43,7 +44,6 @@ fn set_window_icon(windows: NonSend<bevy::winit::WinitWindows>) {
 
     // do it for all windows
     for window in windows.windows.values() {
-        println!("penis");
         window.set_window_icon(Some(icon.clone()));
     }
 }

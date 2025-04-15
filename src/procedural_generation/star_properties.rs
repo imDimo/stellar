@@ -1,5 +1,5 @@
 
-
+#[allow(dead_code)]
 pub fn get_star_properties(mass: f32, age: f32, metallicity: f32) -> (f32, f32, f32, f32, String)
 {
     let lifespan = 10.0 / mass.powf(2.5);

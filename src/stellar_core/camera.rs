@@ -1,4 +1,5 @@
 use bevy::{input::mouse::*, prelude::*};
+use crate::stellar_core;
 
 pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
@@ -15,10 +16,28 @@ fn setup_camera(mut commands: Commands) {
 
 fn update_camera(
     mut camera_query: Query<&mut Transform, With<Camera2d>>, 
+    mut evr_scroll: EventReader<MouseWheel>,
+    ship_query: Query<&mut Transform, (With<stellar_core::ship::Ship>, Without<Camera2d>)>
+) {
+    let mut transform = camera_query.single_mut();
+    let mut zoom: f32 = transform.scale.y;
+
+    for ev in evr_scroll.read() {
+        zoom *= 1.0 - ev.y / 10.0;
+    }
+
+    transform.translation = ship_query.single().translation;
+    transform.scale = Vec3 { x: zoom, y: zoom, z: zoom };
+
+}
+
+#[allow(dead_code)]
+fn update_free_camera(
+    mut camera_query: Query<&mut Transform, With<Camera2d>>, 
     input: Res<ButtonInput<KeyCode>>, 
     mut evr_scroll: EventReader<MouseWheel>,
     mut evr_motion: EventReader<MouseMotion>,
-    buttons: Res<ButtonInput<MouseButton>>,
+    buttons: Res<ButtonInput<MouseButton>>
 ) {
     let mut transform = camera_query.single_mut();
     let mut direction = Vec3::ZERO;

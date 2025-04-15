@@ -35,14 +35,13 @@ fn update_ship(
         stellar_core::navigation::calculate_acceleration(
             &transform.translation.xy(), &bodies.iter().collect()) + ship.velocity;
 
-    let angle = (transform.translation.xy()).angle_to(transform.translation.xy() + new_velocity);
+    let direction = new_velocity.normalize_or_zero();
+    let angle = direction.y.atan2(direction.x) - 0.5 * std::f32::consts::PI;
 
-    transform.rotate_z(angle);
+    transform.rotation = Quat::from_rotation_z(angle);
 
     transform.translation.x += new_velocity.x;
     transform.translation.y += new_velocity.y;
-
-    //println!("{0}", angle.abs());
 
     ship.velocity = new_velocity;
 }

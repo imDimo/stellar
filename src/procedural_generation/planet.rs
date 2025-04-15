@@ -11,18 +11,22 @@
     "Star - Huge hydrogen converters.",
 */
 
-use bevy::prelude::*;
+//use bevy::prelude::*;
+use crate::stellar_core;
 
 pub fn test_planet() {
-    planet(5.9e24, 5515.0, 1.0); //earth!
+    planet(5.9e24, 5515.0, 1.0, 1.0); //earth!
+    planet(6.4e23, 3933.0, 0.8, 0.); //mars
 }
 
-fn planet(mass: f64, density: f64, solar_flux: f64) {
-    const G: f64 = 6.6743015e-11;
+fn planet(mass: f64, density: f64, solar_flux: f64, magnetic_field: f64) {
     let radius = f64::powf((3.0 * mass) / (4.0 * core::f64::consts::PI * density), 1.0 / 3.0);
-    let surface_gravity = (G * mass) / radius.powf(2.0) / 9.7803267715;
+    let surface_gravity = (stellar_core::navigation::G as f64 * mass) / radius.powf(2.0) / 9.7803267715;
+
+    let atmos_modifier = f64::min((1.0 - (solar_flux - magnetic_field)) * surface_gravity, 1.);
+
     
-    println!("{:#?}", (radius, surface_gravity));
+    println!("{:#?}", (radius, surface_gravity, atmos_modifier));
 }
 
 /* 
