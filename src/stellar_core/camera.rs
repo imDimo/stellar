@@ -17,7 +17,7 @@ fn setup_camera(mut commands: Commands) {
 fn update_camera(
     mut camera_query: Query<&mut Transform, With<Camera2d>>, 
     mut evr_scroll: EventReader<MouseWheel>,
-    ship_query: Query<&mut Transform, (With<stellar_core::ship::Ship>, Without<Camera2d>)>
+    mut ship_query: Query<&mut Transform, (With<stellar_core::ship::Ship>, Without<Camera2d>)>
 ) {
     let mut transform = camera_query.single_mut();
     let mut zoom: f32 = transform.scale.y;
@@ -29,6 +29,7 @@ fn update_camera(
     transform.translation = ship_query.single().translation;
     transform.scale = Vec3 { x: zoom, y: zoom, z: zoom };
 
+    ship_query.single_mut().scale = transform.scale * 3.0;
 }
 
 #[allow(dead_code)]

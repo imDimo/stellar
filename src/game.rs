@@ -20,6 +20,6 @@ impl Plugin for GamePlugin {
     }
 }
 
-fn setup_scene(mut commands: Commands) {
-    commands.spawn(celestial_body::CelestialBody {mass: 5.9e10, position: Vec2 { x: 10.0, y: 0.0 }});
+fn setup_scene(mut commands: Commands, mut gizmos: Gizmos) {
+    gizmos.circle_2d(Vec2::splat(0.0), 10.0 as f32, bevy::color::palettes::basic::WHITE);
 }
