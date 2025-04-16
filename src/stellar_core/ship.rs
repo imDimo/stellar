@@ -3,6 +3,7 @@ use crate::stellar_core;
 
 mod thruster;
 use crate::stellar_core::ship::thruster::EngineFlame as EngineFlame;
+use crate::stellar_core::navigation::lerp as lerp;
 
 pub struct ShipPlugin;
 impl Plugin for ShipPlugin {
@@ -17,7 +18,8 @@ impl Plugin for ShipPlugin {
 
 #[derive(Component, Debug)]
 pub struct Ship {
-    pub velocity: Vec2
+    pub velocity: Vec2,
+    pub angular: f32,
 }
 
 fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
@@ -27,7 +29,7 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
 
     //assemble the ship
     commands.spawn((
-        Ship { velocity: Vec2 {x: 0.0, y: 0.1 }},
+        Ship { velocity: Vec2 {x: 0.0, y: 0.1 }, angular: 0.01 },
         Sprite { image: ship_image, custom_size: Some(Vec2::splat(8.)), ..default() },
         Transform::from_xyz(0.0, 0.0, 1.0)
     ))
@@ -44,7 +46,7 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
     ))
     .with_child(
-        thruster::get_thruster_bundle(&engine_flame, 1,
+        thruster::get_thruster_bundle(&engine_flame, 2,
             Transform::from_xyz(-3.0, 2.0, 0.0)
             .with_rotation(Quat::from_rotation_z(-2.5))
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
@@ -70,9 +72,11 @@ fn update_ship(
 
     //normalize this value for angle calculation
     let direction = new_velocity.normalize_or_zero();
-    let angle = direction.y.atan2(direction.x) - 0.5 * std::f32::consts::PI; //rotate it by 90 degrees
+    let target_angle = direction.y.atan2(direction.x); //rotate it by 90 degrees
+    let current_angle = transform.rotation.z + ship.angular;
 
-    transform.rotation = Quat::from_rotation_z(angle);
+    //ship.angular *= (target_angle - current_angle) / 1.0;
+    transform.rotation = Quat::from_rotation_z(current_angle + ship.angular - 0.5 * std::f32::consts::PI);
 
     transform.translation.x += new_velocity.x;
     transform.translation.y += new_velocity.y;
@@ -82,15 +86,20 @@ fn update_ship(
 
 fn ship_controls(
     buttons: Res<ButtonInput<MouseButton>>,
-    mut engines: Query<&mut EngineFlame>,
+    mut ship_query: Query<(&mut Ship, &mut Transform)>,
+    mut engines: Query<&mut EngineFlame, Without<Ship>>,
     q_windows: Query<&Window, With<bevy::window::PrimaryWindow>>
 ) {
+    let (mut ship, mut transform) = ship_query.single_mut();
+    let speed = 0.01 / ship.velocity.max_element();
+
     if buttons.pressed(MouseButton::Left) {
         engines.iter_mut().for_each(|mut e| {
             if e.id == 0 {
                 e.active = true;
             }
         });
+        ship.velocity *= 1.0 + speed;
     }
     else {
         engines.iter_mut().for_each(|mut e| {
@@ -102,14 +111,16 @@ fn ship_controls(
 
     if buttons.pressed(MouseButton::Right) {
         engines.iter_mut().for_each(|mut e| {
-            if e.id == 1 {
+            if e.id == 2 {
                 e.active = true;
             }
         });
+        //ship.velocity *= 1.0 - speed;
+        ship.angular *= 1.0 + speed;
     }
     else {
         engines.iter_mut().for_each(|mut e| {
-            if e.id == 1 {
+            if e.id == 1 || e.id == 2 {
                 e.active = false;
             }
         });
