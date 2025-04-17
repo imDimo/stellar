@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-
-
 use crate::stellar_core::{camera, ship, celestial_body};
 //use crate::procedural_generation;
 
@@ -20,6 +18,6 @@ impl Plugin for GamePlugin {
     }
 }
 
-fn setup_scene(mut commands: Commands, mut gizmos: Gizmos) {
+fn setup_scene(mut _commands: Commands, mut gizmos: Gizmos) {
     gizmos.circle_2d(Vec2::splat(0.0), 10.0 as f32, bevy::color::palettes::basic::WHITE);
 }

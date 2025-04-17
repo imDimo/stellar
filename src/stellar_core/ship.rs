@@ -1,4 +1,3 @@
-use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
 use crate::stellar_core;
 
@@ -81,10 +80,10 @@ fn update_ship(
              + ship.velocity; //and add it to the current velocity
 
     //normalize this value for angle calculation
-    let direction = new_velocity.normalize_or_zero();
-    let target_angle = direction.y.atan2(direction.x); //rotate it by 90 degrees
+    //let direction = new_velocity.normalize_or_zero();
 
-    let current_angle = transform.rotation.to_euler(EulerRot::XYZ).2;
+    //let target_angle = direction.y.atan2(direction.x); //rotate it by 90 degrees
+    //let current_angle = transform.rotation.to_euler(EulerRot::XYZ).2;
 
     //ship.angular += (current_angle - target_angle) / 10000.0;
     //debug!((ship.angular, current_angle, target_angle));
@@ -102,10 +101,9 @@ fn ship_controls(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut ship_query: Query<(&mut Ship, &mut Transform)>,
     mut engines: Query<&mut EngineFlame, Without<Ship>>,
-    q_windows: Query<&Window, With<bevy::window::PrimaryWindow>>
+    _q_windows: Query<&Window, With<bevy::window::PrimaryWindow>>
 ) {
-    let (mut ship, mut transform) = ship_query.single_mut();
-    let speed = 0.01 / ship.velocity.max_element();
+    let (mut ship, transform) = ship_query.single_mut();
 
     if mouse_buttons.pressed(MouseButton::Right) {
         engines.iter_mut().for_each(|mut e| {
