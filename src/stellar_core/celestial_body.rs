@@ -21,10 +21,11 @@ fn setup_solar_system(mut commands: Commands, asset_server : Res<AssetServer>) {
         ));
 }
 
-fn update_solar_system(bodies: Query<&mut CelestialBody>, mut gizmos: Gizmos) {
+fn update_solar_system(_bodies: Query<&mut CelestialBody>, mut _gizmos: Gizmos) {
 
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Component, Debug)]
 pub struct CelestialBody {
     pub mass: f64,

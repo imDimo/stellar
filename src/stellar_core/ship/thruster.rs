@@ -17,7 +17,7 @@ pub fn get_thruster_bundle(engine_flame: &Handle<Image>, id: i32, transform: Tra
 
 pub fn update_thrusters(mut thruster_query: Query<(&mut Transform, &EngineFlame)>) {
 
-    for (i, (mut transform, engine_flame)) in thruster_query.iter_mut().enumerate() {
+    for (_, (mut transform, engine_flame)) in thruster_query.iter_mut().enumerate() {
         if engine_flame.active == true {
             transform.scale.y = lerp(transform.scale.y, 4.0 + rand::random_range(-1.0..1.0), 4.0);
         }

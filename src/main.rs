@@ -1,4 +1,4 @@
-use bevy::{math::VectorSpace, prelude::*};
+use bevy::prelude::*;
 
 mod stellar_core;
 mod procedural_generation;
@@ -7,7 +7,7 @@ mod game;
 fn main() {
     
     //procedural_generation::planet::test_planet();
-    test_grav();
+    //test_grav();
     //return;
     
     App::new()
@@ -26,7 +26,7 @@ fn main() {
 
                 game::GamePlugin,
             ))
-        //.add_systems(Startup, set_window_icon)
+        .add_systems(Startup, set_window_icon)
         .run();
 
 }
@@ -47,12 +47,5 @@ fn set_window_icon(windows: NonSend<bevy::winit::WinitWindows>) {
     // do it for all windows
     for window in windows.windows.values() {
         window.set_window_icon(Some(icon.clone()));
-    }
-}
-
-fn test_grav() {
-    for x in 0..20 {
-        let vx = stellar_core::navigation::acceleration(&Vec2::new(x as f32, 0.0), &Vec2::ZERO, 1e15, 10.0);
-        println!("({0}, {1})", x * 150, vx.x);
     }
 }

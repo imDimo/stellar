@@ -1,9 +1,12 @@
+use bevy::input::keyboard::KeyboardInput;
 use bevy::prelude::*;
 use crate::stellar_core;
 
 mod thruster;
+
+use core::f32::consts::PI as PI;
 use crate::stellar_core::ship::thruster::EngineFlame as EngineFlame;
-use crate::stellar_core::navigation::lerp as lerp;
+use crate::stellar_core::navigation::calculate_acceleration as calculate_acceleration;
 
 pub struct ShipPlugin;
 impl Plugin for ShipPlugin {
@@ -22,6 +25,13 @@ pub struct Ship {
     pub angular: f32,
 }
 
+#[macro_export]
+macro_rules! debug {
+    ( $tuple:expr ) => {
+        println!("{:?}", $tuple);
+    };
+}
+
 fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     //load textures
     let ship_image: Handle<Image> = asset_server.load("ship.png");
@@ -35,20 +45,20 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     ))
     .with_child( //the engine flame is a child because it allows custom placement of the plume
         thruster::get_thruster_bundle(&engine_flame, 0,
-            Transform::from_xyz(0.0, -6.0, 0.0)
-            .with_rotation(Quat::from_rotation_z(0.0))
+            Transform::from_xyz(-6.0, 0.0, 0.0)
+            .with_rotation(Quat::from_rotation_z(1.5 * PI))
             .with_scale(Vec3 { x: 0.8, y: 4.0, z: 1.0 })
     ))
     .with_child(
         thruster::get_thruster_bundle(&engine_flame, 1,
-            Transform::from_xyz(3.0, 2.0, 0.0)
-            .with_rotation(Quat::from_rotation_z(2.5))
+            Transform::from_xyz(2.0, 3.0, 0.0)
+            .with_rotation(Quat::from_rotation_z(0.5 * PI + 0.3))
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
     ))
     .with_child(
         thruster::get_thruster_bundle(&engine_flame, 2,
-            Transform::from_xyz(-3.0, 2.0, 0.0)
-            .with_rotation(Quat::from_rotation_z(-2.5))
+            Transform::from_xyz(2.0, -3.0, 0.0)
+            .with_rotation(Quat::from_rotation_z(0.5 * PI - 0.3))
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
     ))
     ;
@@ -67,16 +77,19 @@ fn update_ship(
 
     //calculate the velocity gravitational attraction produces at this point in space
     let new_velocity = 
-        stellar_core::navigation::calculate_acceleration(&transform.translation.xy(), &bodies_query.iter().collect())
+        calculate_acceleration(&transform.translation.xy(), &bodies_query.iter().collect())
              + ship.velocity; //and add it to the current velocity
 
     //normalize this value for angle calculation
     let direction = new_velocity.normalize_or_zero();
     let target_angle = direction.y.atan2(direction.x); //rotate it by 90 degrees
-    let current_angle = transform.rotation.z + ship.angular;
 
-    //ship.angular *= (target_angle - current_angle) / 1.0;
-    transform.rotation = Quat::from_rotation_z(current_angle + ship.angular - 0.5 * std::f32::consts::PI);
+    let current_angle = transform.rotation.to_euler(EulerRot::XYZ).2;
+
+    //ship.angular += (current_angle - target_angle) / 10000.0;
+    //debug!((ship.angular, current_angle, target_angle));
+
+    transform.rotation *= Quat::from_rotation_z(ship.angular);
 
     transform.translation.x += new_velocity.x;
     transform.translation.y += new_velocity.y;
@@ -85,7 +98,8 @@ fn update_ship(
 }
 
 fn ship_controls(
-    buttons: Res<ButtonInput<MouseButton>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut ship_query: Query<(&mut Ship, &mut Transform)>,
     mut engines: Query<&mut EngineFlame, Without<Ship>>,
     q_windows: Query<&Window, With<bevy::window::PrimaryWindow>>
@@ -93,13 +107,49 @@ fn ship_controls(
     let (mut ship, mut transform) = ship_query.single_mut();
     let speed = 0.01 / ship.velocity.max_element();
 
-    if buttons.pressed(MouseButton::Left) {
+    if mouse_buttons.pressed(MouseButton::Right) {
+        engines.iter_mut().for_each(|mut e| {
+            if e.id == 2 {
+                e.active = true;
+            }
+        });
+        ship.angular -= 0.001;
+    }
+    else {
+        engines.iter_mut().for_each(|mut e| {
+            if e.id == 2 {
+                e.active = false;
+            }
+        });
+    }
+
+    if mouse_buttons.pressed(MouseButton::Left) {
+        engines.iter_mut().for_each(|mut e| {
+            if e.id == 1 {
+                e.active = true;
+            }
+        });
+        ship.angular += 0.001;
+    }
+    else {
+        engines.iter_mut().for_each(|mut e| {
+            if e.id == 1 {
+                e.active = false;
+            }
+        });
+    }
+
+    if keyboard.pressed(KeyCode::Space) {
         engines.iter_mut().for_each(|mut e| {
             if e.id == 0 {
                 e.active = true;
             }
         });
-        ship.velocity *= 1.0 + speed;
+
+        let angle = transform.rotation.to_euler(EulerRot::XYZ).2;
+        let direction = Vec2 { x: f32::cos(angle), y: f32::sin(angle) };
+
+        ship.velocity += direction / 10.0;
     }
     else {
         engines.iter_mut().for_each(|mut e| {
@@ -109,20 +159,4 @@ fn ship_controls(
         });
     }
 
-    if buttons.pressed(MouseButton::Right) {
-        engines.iter_mut().for_each(|mut e| {
-            if e.id == 2 {
-                e.active = true;
-            }
-        });
-        //ship.velocity *= 1.0 - speed;
-        ship.angular *= 1.0 + speed;
-    }
-    else {
-        engines.iter_mut().for_each(|mut e| {
-            if e.id == 1 || e.id == 2 {
-                e.active = false;
-            }
-        });
-    }
 }
