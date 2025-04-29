@@ -5,7 +5,7 @@ mod thruster;
 
 use core::f32::consts::PI as PI;
 use crate::stellar_core::ship::thruster::EngineFlame as EngineFlame;
-use crate::stellar_core::navigation::calculate_acceleration as calculate_acceleration;
+use crate::stellar_core::navigation::lerp as lerp;
 
 pub struct ShipPlugin;
 impl Plugin for ShipPlugin {
@@ -35,6 +35,8 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     //load textures
     let ship_image: Handle<Image> = asset_server.load("ship.png");
     let engine_flame: Handle<Image> = asset_server.load("engine_flame.png");
+
+
 
     //assemble the ship
     commands.spawn((
@@ -76,17 +78,8 @@ fn update_ship(
 
     //calculate the velocity gravitational attraction produces at this point in space
     let new_velocity = 
-        calculate_acceleration(&transform.translation.xy(), &bodies_query.iter().collect())
+        stellar_core::navigation::calculate_acceleration(&transform.translation.xy(), &bodies_query.iter().collect())
              + ship.velocity; //and add it to the current velocity
-
-    //normalize this value for angle calculation
-    //let direction = new_velocity.normalize_or_zero();
-
-    //let target_angle = direction.y.atan2(direction.x); //rotate it by 90 degrees
-    //let current_angle = transform.rotation.to_euler(EulerRot::XYZ).2;
-
-    //ship.angular += (current_angle - target_angle) / 10000.0;
-    //debug!((ship.angular, current_angle, target_angle));
 
     transform.rotation *= Quat::from_rotation_z(ship.angular);
 
@@ -98,63 +91,71 @@ fn update_ship(
 
 fn ship_controls(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    keyboard: Res<ButtonInput<KeyCode>>,
     mut ship_query: Query<(&mut Ship, &mut Transform)>,
     mut engines: Query<&mut EngineFlame, Without<Ship>>,
-    _q_windows: Query<&Window, With<bevy::window::PrimaryWindow>>
+    q_windows: Query<&Window, With<bevy::window::PrimaryWindow>>
 ) {
-    let (mut ship, transform) = ship_query.single_mut();
+    let Ok((mut ship, transform)) = ship_query.get_single_mut() else { return };
+    let Ok(window) = q_windows.get_single() else { return };
 
     if mouse_buttons.pressed(MouseButton::Right) {
-        engines.iter_mut().for_each(|mut e| {
-            if e.id == 2 {
+        for mut e in engines.iter_mut() {
+            if e.id > 0 {
                 e.active = true;
             }
-        });
-        ship.angular -= 0.001;
+        }
+
+        ship.angular *= 0.95;
+        ship.velocity *= 0.95;
     }
     else {
-        engines.iter_mut().for_each(|mut e| {
-            if e.id == 2 {
+        for mut e in engines.iter_mut() {
+            if e.id > 0 {
                 e.active = false;
             }
-        });
+        }
     }
 
     if mouse_buttons.pressed(MouseButton::Left) {
-        engines.iter_mut().for_each(|mut e| {
-            if e.id == 1 {
-                e.active = true;
+        engines.iter_mut().find(|e| e.id == 0).map(|mut e| e.active = true);
+
+        //unpack this safely incase user does something like click then drag mouse outside of the window.
+        let Some(cursor_pos) = window.cursor_position() else { return };
+
+        let world_pos = 
+            transform.translation.xy() + cursor_pos - window.size() / 2.0;
+
+        let velocity_modifier = Vec2 { 
+            x: (world_pos.x - transform.translation.x), 
+            y: -(world_pos.y - transform.translation.y) 
+        } / 1.0e3;
+
+        ship.velocity += velocity_modifier;
+
+        if ship.velocity.length_squared() > 0.0 {
+            let nrm = velocity_modifier.normalize();
+            let target_angle = nrm.y.atan2(nrm.x); // x and y swapped for standard atan2
+        
+            // Extract the current angle from the transform's rotation
+            let current_angle = transform.rotation.to_euler(EulerRot::XYZ).2;
+        
+            // Compute shortest angle difference
+            let mut angle_diff = target_angle - current_angle;
+
+            if angle_diff > PI {
+                angle_diff -= 2.0 * PI;
+            } 
+            else if angle_diff < -PI {
+                angle_diff += 2.0 * PI;
             }
-        });
-        ship.angular += 0.001;
+        
+            // Apply damped turning speed
+            ship.angular = angle_diff * 0.1;
+        }
+
     }
     else {
-        engines.iter_mut().for_each(|mut e| {
-            if e.id == 1 {
-                e.active = false;
-            }
-        });
-    }
-
-    if keyboard.pressed(KeyCode::Space) {
-        engines.iter_mut().for_each(|mut e| {
-            if e.id == 0 {
-                e.active = true;
-            }
-        });
-
-        let angle = transform.rotation.to_euler(EulerRot::XYZ).2;
-        let direction = Vec2 { x: f32::cos(angle), y: f32::sin(angle) };
-
-        ship.velocity += direction / 10.0;
-    }
-    else {
-        engines.iter_mut().for_each(|mut e| {
-            if e.id == 0 {
-                e.active = false;
-            }
-        });
+        engines.iter_mut().find(|e| e.id == 0).map(|mut e| e.active = false);
     }
 
 }

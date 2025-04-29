@@ -9,6 +9,13 @@ fn main() {
     //procedural_generation::planet::test_planet();
     //test_grav();
     //return;
+
+    let mass: f64 = 382718848909990000.0;
+
+    let radius: f64 = 35000.0;//f64::powf((3.0 * mass) / (4.0 * core::f64::consts::PI * density), 1.0 / 3.0);
+    let surface_gravity = (stellar_core::navigation::G as f64 * mass) / radius.powf(2.0) / 9.7803267715;
+
+    println!("{}", surface_gravity);
     
     App::new()
         .add_plugins((
@@ -22,7 +29,7 @@ fn main() {
                     }),
                     ..Default::default()
                 })
-                .set(ImagePlugin::default_linear()),
+                .set(ImagePlugin::default_nearest()),
 
                 game::GamePlugin,
             ))

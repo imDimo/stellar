@@ -12,9 +12,10 @@
 */
 
 //use bevy::prelude::*;
-use crate::stellar_core::{self, celestial_body::CelestialBody};
+use crate::stellar_core;
+use crate::stellar_core::celestial_body::CelestialBody as CelestialBody;
 
-pub fn generate_planet(mass: f64, density: f64, solar_flux: f64, magnetic_field: f64) -> stellar_core::celestial_body::CelestialBody {
+pub fn generate_planet(mass: f64, density: f64, solar_flux: f64, magnetic_field: f64) -> CelestialBody {
     let radius = f64::powf((3.0 * mass) / (4.0 * core::f64::consts::PI * density), 1.0 / 3.0);
     let surface_gravity = (stellar_core::navigation::G as f64 * mass) / radius.powf(2.0) / 9.7803267715;
 

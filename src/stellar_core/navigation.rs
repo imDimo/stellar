@@ -1,3 +1,5 @@
+use core::f32;
+
 use bevy::prelude::*;
 use super::celestial_body::CelestialBody;
 
@@ -38,4 +40,15 @@ pub fn acceleration(pos1: &Vec2, pos2: &Vec2, mass: f32, radius: f32) -> Vec2 {
 //linear interpolation
 pub fn lerp(start: f32, end: f32, speed: f32) -> f32 {
     (end - start) / speed + start
+}
+
+//sigmoid
+pub fn sigmoid(z: f32) -> f32 {
+    return 1.0 / (1.0 + (-z).exp());
+}
+
+//sigmoid derivative
+pub fn sigmoid_derivative(z: f32) -> f32 {
+    let sigmoid_x = 1.0 / (1.0 + (-z).exp());
+    return 0.25 - (0.25 - sigmoid_x) * (0.25 - sigmoid_x);
 }

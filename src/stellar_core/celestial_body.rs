@@ -13,7 +13,7 @@ impl Plugin for SolarPlugin {
 
 fn setup_solar_system(mut commands: Commands, asset_server : Res<AssetServer>) {
     let planet_image = asset_server.load("icon.png");
-    let planet = gen::generate_planet(5.9e14, 5515.0, 1.0, 1.0);
+    let planet = gen::generate_planet(5.9e16, 551500.0, 1.0, 1.0);
     commands.spawn((
         planet.clone(),
         Sprite { image: planet_image, custom_size: Some(Vec2::splat(planet.radius as f32)), ..default() },
