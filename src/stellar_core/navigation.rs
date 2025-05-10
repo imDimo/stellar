@@ -5,10 +5,13 @@ use super::celestial_body::CelestialBody;
 
 pub const G: f32 = 6.6743015e-11;
 
+//calculate the total acceleration at a given position from a vec of celestial bodies.
 pub fn calculate_acceleration(position: &Vec2, bodies: &Vec<(&CelestialBody, &bevy::prelude::Transform)>) -> Vec2 {
 
+    //start with zero accel
     let mut accel = Vec2::new(0.0,0.0);
 
+    //iterate through each body, adding the acceleration togethher.
     for body in bodies {
         accel += acceleration(
             &body.1.translation.xy(), 
@@ -20,35 +23,23 @@ pub fn calculate_acceleration(position: &Vec2, bodies: &Vec<(&CelestialBody, &be
     return accel;
 }
 
+//modified newton's. Ignores mass of one of the objects, and adds a repulsive force 
 pub fn acceleration(pos1: &Vec2, pos2: &Vec2, mass: f32, radius: f32) -> Vec2 {
     let delta_pos = pos1 - pos2;
 
+    //true distance is split into two calculations  since we want to check for zero
     let distance_squared = delta_pos.length_squared();
     if distance_squared == 0.0 { 
-        return Vec2::splat(0.0);
+        return Vec2::splat(0.0); //avoid division by zero
     }
 
     let distance = distance_squared.sqrt();
+    //calculate magnitude + incorporate repulsive force calculation
     let acceleration_magnitude = G * mass * (distance_squared - radius * radius) / (distance_squared * distance_squared);
 
     let direction = delta_pos / distance;
+    //cap it to at minimum -0.1
     let acceleration = direction * f32::max(-0.1, acceleration_magnitude);
 
     return acceleration;
-}
-
-//linear interpolation
-pub fn lerp(start: f32, end: f32, speed: f32) -> f32 {
-    (end - start) / speed + start
-}
-
-//sigmoid
-pub fn sigmoid(z: f32) -> f32 {
-    return 1.0 / (1.0 + (-z).exp());
-}
-
-//sigmoid derivative
-pub fn sigmoid_derivative(z: f32) -> f32 {
-    let sigmoid_x = 1.0 / (1.0 + (-z).exp());
-    return 0.25 - (0.25 - sigmoid_x) * (0.25 - sigmoid_x);
 }

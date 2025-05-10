@@ -2,10 +2,11 @@ use bevy::prelude::*;
 use crate::stellar_core;
 
 mod thruster;
+mod path;
 
 use core::f32::consts::PI as PI;
-use crate::stellar_core::ship::thruster::EngineFlame as EngineFlame;
-use crate::stellar_core::navigation::lerp as lerp;
+use thruster::EngineFlame as EngineFlame;
+use path::ShipPath as ShipPath;
 
 pub struct ShipPlugin;
 impl Plugin for ShipPlugin {
@@ -13,8 +14,10 @@ impl Plugin for ShipPlugin {
         app
             .add_systems(Startup, setup_ship)
             .add_systems(Update, update_ship)
-            .add_systems(Update, stellar_core::ship::thruster::update_thrusters)
-            .add_systems(Update, ship_controls);
+            .add_systems(Update, EngineFlame::update_thrusters)
+            .add_systems(Update, ship_controls)
+            .add_systems(Update, ShipPath::update)
+            ;
     }
 }
 
@@ -24,45 +27,40 @@ pub struct Ship {
     pub angular: f32,
 }
 
-#[macro_export]
-macro_rules! debug {
-    ( $tuple:expr ) => {
-        println!("{:?}", $tuple);
-    };
-}
-
 fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     //load textures
     let ship_image: Handle<Image> = asset_server.load("ship.png");
     let engine_flame: Handle<Image> = asset_server.load("engine_flame.png");
-
-
+    let path_pip: Handle<Image> = asset_server.load("circle.png");
 
     //assemble the ship
-    commands.spawn((
+    let ship = commands.spawn((
         Ship { velocity: Vec2 {x: 0.0, y: 0.1 }, angular: 0.01 },
         Sprite { image: ship_image, custom_size: Some(Vec2::splat(8.)), ..default() },
         Transform::from_xyz(0.0, 0.0, 1.0)
     ))
     .with_child( //the engine flame is a child because it allows custom placement of the plume
-        thruster::get_thruster_bundle(&engine_flame, 0,
+        thruster::EngineFlame::new(&engine_flame, 0,
             Transform::from_xyz(-6.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(1.5 * PI))
             .with_scale(Vec3 { x: 0.8, y: 4.0, z: 1.0 })
     ))
     .with_child(
-        thruster::get_thruster_bundle(&engine_flame, 1,
+        thruster::EngineFlame::new(&engine_flame, 1,
             Transform::from_xyz(2.0, 3.0, 0.0)
             .with_rotation(Quat::from_rotation_z(0.5 * PI + 0.3))
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
     ))
     .with_child(
-        thruster::get_thruster_bundle(&engine_flame, 2,
+        thruster::EngineFlame::new(&engine_flame, 2,
             Transform::from_xyz(2.0, -3.0, 0.0)
             .with_rotation(Quat::from_rotation_z(0.5 * PI - 0.3))
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
-    ))
+    )).id()
     ;
+
+    commands.entity(ship).insert((ShipPath::new(5, &path_pip)));
+
 }
 
 //process gravity for the ship
@@ -152,7 +150,6 @@ fn ship_controls(
             // Apply damped turning speed
             ship.angular = angle_diff * 0.1;
         }
-
     }
     else {
         engines.iter_mut().find(|e| e.id == 0).map(|mut e| e.active = false);
