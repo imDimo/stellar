@@ -1,15 +1,15 @@
-use bevy::{log::tracing_subscriber::field::debug, prelude::*};
+use bevy::prelude::*;
 
 mod stellar_core;
 mod procedural_generation;
 mod game;
 
-use procedural_generation::planet::generate_planet as p;
+//use procedural_generation::planet::generate_planet as p;
 
 fn main() {
 
     for _ in 0..15 {
-        p(6.0e24, 5515.0, 1.0, 1.0);
+        //p(6.0e24, 1e200, 5515.0, 1.0, 1.0);
     }
 
     App::new()

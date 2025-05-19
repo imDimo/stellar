@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use crate::stellar_core;
 
 mod thruster;
-mod path;
+//mod path;
 
 use core::f32::consts::PI as PI;
 use thruster::EngineFlame as EngineFlame;
-use path::ShipPath as ShipPath;
+//use path::ShipPath as ShipPath;
 
 pub struct ShipPlugin;
 impl Plugin for ShipPlugin {
@@ -16,7 +16,7 @@ impl Plugin for ShipPlugin {
             .add_systems(Update, update_ship)
             .add_systems(Update, EngineFlame::update_thrusters)
             .add_systems(Update, ship_controls)
-            .add_systems(Update, ShipPath::update)
+            //.add_systems(Update, ShipPath::update)
             ;
     }
 }
@@ -31,10 +31,10 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     //load textures
     let ship_image: Handle<Image> = asset_server.load("ship.png");
     let engine_flame: Handle<Image> = asset_server.load("engine_flame.png");
-    let path_pip: Handle<Image> = asset_server.load("circle.png");
+    //let path_pip: Handle<Image> = asset_server.load("circle.png");
 
     //assemble the ship
-    let ship = commands.spawn((
+    let _ship = commands.spawn((
         Ship { velocity: Vec2 {x: 0.0, y: 0.1 }, angular: 0.01 },
         Sprite { image: ship_image, custom_size: Some(Vec2::splat(8.)), ..default() },
         Transform::from_xyz(0.0, 0.0, 1.0)
@@ -59,7 +59,7 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     )).id()
     ;
 
-    commands.entity(ship).insert((ShipPath::new(5, &path_pip)));
+    //commands.entity(ship).insert((ShipPath::new(5, &path_pip)));
 
 }
 

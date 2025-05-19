@@ -1,4 +1,6 @@
 /*
+    Note to self - these are the kinds of things this generator should be able to make.
+
     "Earth-Like-World / Land Rivers - A terran like planet with land, rivers and clouds.",
     "Ice World - Ice planet, with some water lakes, wind and clouds.",
     "Terran Dry - A mars-like rocky planet, close to its star, dried out of any water.",
@@ -7,13 +9,11 @@
     "Gas Giant I - A cold planet, outside the frost line.",
     "Gas Giant II - A cold planet, outside the frost line, variation.",
     "Lava World - A protoplanet, perhaps too close to a star.",
-    "Asteroid - Fragment of matter roaming in space.",
-    "Star - Huge hydrogen converters.",
 */
 
-use crate::stellar_core;
+//use crate::stellar_core;
 use crate::stellar_core::celestial_body::CelestialBody as CelestialBody;
-use stellar_core::navigation::G as G;
+use bevy::{prelude::*, render::render_resource::{Extent3d, TextureDimension}};
 
 use rand_distr::{Distribution, Normal};
 
@@ -21,8 +21,9 @@ const EARTH_RADIUS: f64 = 6.371e6;
 const EARTH_MASS: f64 = 5.972e24;
 const EARTH_GRAVITY: f64 = 9.7803267715;
 const STEFAN_BOLTZMANN: f64 = 5.670374419e-8;
+const G: f64 = 6.6743015e-11;
 
-pub fn generate_planet(mass: f64, density: f64, solar_flux: f64, magnetic_field: f64) -> CelestialBody {
+pub fn generate_planet(mass: f64, star_mass: f64, density: f64, solar_flux: f64, magnetic_field: f64) -> CelestialBody {
 
     //in meters
     let radius = f64::powf((3.0 * mass) / (4.0 * core::f64::consts::PI * density), 1.0 / 3.0);
@@ -32,64 +33,127 @@ pub fn generate_planet(mass: f64, density: f64, solar_flux: f64, magnetic_field:
     //in m/s
     let escape_velocity = ((2.0 * G as f64 * mass) / radius).sqrt();
 
+    //likely to re-do this later to settle the generator system
+    let semi_major_axis = calculate_semi_major_axis(mass, star_mass, solar_flux);
+    let orbital_period = calculate_orbital_period(semi_major_axis, star_mass, mass);
+
     let temp_base = 278.0 * solar_flux.sqrt();
     let mean_mol_weight = 28.97;
     let gas_retention_factor = 
         escape_velocity / ((3.0 * 1.380649e-23 * temp_base / (mean_mol_weight * 1.66053906660e-27)).sqrt());
 
+    //we wanna distribute the possible atmospheres normally, to get some more interesting generation
     let nrm = Normal::new(mass / EARTH_MASS, 2.1).unwrap();
     let v: f64 = nrm.sample(&mut rand::rng()).abs();
 
-    // Use gas retention to modulate atmosphere retention (0.0 to 1.0 scale)
+    //use gas retention to modulate atmosphere retention (0.0 to 1.0 scale)
     let retention_efficiency = (gas_retention_factor / 10.0).clamp(0.0, 1.0);
 
-    // Solar flux and magnetic field affect atmospheric erosion or shielding
+    //solar flux and magnetic field affect atmospheric erosion or shielding
     let erosion_factor = (solar_flux - magnetic_field).max(0.0);
     let erosion_penalty = erosion_factor * (1.0 - retention_efficiency);
 
-    // Atmos modifier represents net gain/loss potential for atmosphere
+    //atmos modifier represents net gain/loss potential for atmosphere
     let atmos_modifier = ((v * retention_efficiency) - erosion_penalty).clamp(0.0, 5.0);
 
-    // Final atmospheric pressure in atm
+    //final atmospheric pressure in atm
     let atmos_pressure = atmos_modifier;
 
-    // Temperature estimate
-    let greenhouse_effect = atmos_modifier * 33.0; // 33K is Earth's greenhouse contribution
+    //temperature estimate
+    let greenhouse_effect = atmos_modifier * 33.0; //33K is Earth's greenhouse contribution
     let temp = temp_base + greenhouse_effect;
 
-    // Albedo: depends on clouds, surface type, etc.
+    //albedo: depends on clouds, surface type, etc.
     let albedo = (0.1 + 0.2 * (1.0 - magnetic_field).clamp(0.0, 1.0)) * (1.0 - 0.2 * atmos_pressure.clamp(0.0, 5.0));
     let equilibrium_temp = ((solar_flux * (1.0 - albedo)) / (4.0 * STEFAN_BOLTZMANN)).powf(0.25);
 
-    // Solar day length: increase with size (simplified)
+    //solar day length: just increase with size
     let solar_day_length = 24.0 * (radius / EARTH_RADIUS).sqrt();
 
-    // Magnetic field strength vs core and rotation
+    //magnetic field strength vs core and rotation
     let rotation_speed = 1.0 / solar_day_length;
     let magnetic_intensity = (mass / EARTH_MASS).sqrt() * rotation_speed;
 
-    // Plate tectonics estimation (requires liquid core and sufficient mass)
+    //plate tectonics estimation (requiring liquid core and sufficient mass etc)
     let tectonic_activity = if mass > 0.5 * EARTH_MASS && temp > 200.0 {
         "active"
     } else {
         "stagnant"
     };
 
-    // Habitability score: crude, composite metric
+    //habitability score: crude, composite metric
     let mut habitability = 1.0;
-    habitability *= if (temp >= 273.0 && temp <= 373.0) { 1.0 } else { 0.5 };
+    habitability *= if temp >= 273.0 && temp <= 373.0 { 1.0 } else { 0.5 };
     habitability *= if atmos_pressure > 0.1 && atmos_pressure < 5.0 { 1.0 } else { 0.3 };
     habitability *= if magnetic_intensity > 0.2 { 1.0 } else { 0.2 };
     habitability *= if albedo > 0.1 && albedo < 0.7 { 1.0 } else { 0.7 };
 
-    // Composition estimation (based on density)
+    //composition estimation (based on density)
     let composition = match density {
         d if d < 3000.0 => "gas giant or ice world",
         d if d < 5500.0 => "rocky with volatile-rich crust",
         _ => "rocky with metallic core",
     };
 
-    println!("{composition} with {radius}m, {surface_gravity}G, {escape_velocity}m/s, {atmos_pressure}atm, albedo: {albedo}, {temp}K, {tectonic_activity} tectonic activity; {habitability} hab score.");
+    dbg!((composition, radius, surface_gravity, escape_velocity, atmos_pressure, albedo, temp, equilibrium_temp, tectonic_activity, habitability, orbital_period, semi_major_axis));
 
-    CelestialBody { mass, density, radius, surface_gravity, atmos: atmos_pressure } 
+    //CelestialBody { ..default() }
+    return CelestialBody { 
+        mass: mass, 
+        density: density, 
+        radius: radius, 
+        surface_gravity: surface_gravity, 
+        atmos_pressure: atmos_pressure, 
+        orbital_period: orbital_period, 
+        surface_temperature: temp, 
+        atmosphere_composition: vec![(composition.to_string(), 1.0)], 
+        magnetic_field_strength: magnetic_field, 
+        tectonic_activity: tectonic_activity.to_string(), 
+        habitability: habitability 
+    };
+}
+
+// Function to calculate semi-major axis using Kepler's Third Law
+fn calculate_semi_major_axis(mass_planet: f64, mass_star: f64, orbital_period: f64) -> f64 {
+    let numerator = (orbital_period.powi(2)) * G * (mass_star + mass_planet);
+    let denominator = 4.0 * std::f64::consts::PI.powi(2);
+    return (numerator / denominator).cbrt(); // Cube root to get the semi-major axis
+}
+
+// Function to determine orbital period from semi-major axis and other parameters
+fn calculate_orbital_period(semi_major_axis: f64, mass_star: f64, mass_planet: f64) -> f64 {
+    let numerator = (semi_major_axis.powi(3)) * 4.0 * std::f64::consts::PI.powi(2);
+    let denominator = G * (mass_star + mass_planet);
+    return (numerator / denominator).sqrt();
+}
+
+pub fn generate_planet_texture(width: i32, height: i32, mut images: ResMut<Assets<Image>>) -> Handle<Image> {
+    let mut tex = Image::new_fill(
+        Extent3d { width: width as u32, height: height as u32, depth_or_array_layers: 1 }, 
+        TextureDimension::D2,
+        &[0, 0, 0, 0],
+        bevy::render::render_resource::TextureFormat::Rgba32Uint,
+        bevy::asset::RenderAssetUsages::RENDER_WORLD | bevy::asset::RenderAssetUsages::MAIN_WORLD
+    );
+
+    let c_x = width / 2;
+    let c_y = height / 2;
+
+    let d_s = |x: i32, y: i32| { 
+        (x - c_x).pow(2) + (y - c_y).pow(2)
+    };
+
+    for y in 0..tex.height() as i32 {
+        for x in 0..tex.width() as i32 {
+            if d_s(x, y) == c_x.pow(2) {
+                let p = (y * width + x) as usize;
+                tex.data[p] = 255;
+                tex.data[p + 1] = 165;
+                tex.data[p + 2] = 0;
+                tex.data[p + 3] = 255;
+            }
+        }
+    }
+
+    return images.add(tex);
 }
