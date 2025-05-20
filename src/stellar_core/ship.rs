@@ -25,6 +25,17 @@ impl Plugin for ShipPlugin {
 pub struct Ship {
     pub velocity: Vec2,
     pub angular: f32,
+    pub future_path: Vec<Vec2>,
+}
+
+impl Ship {
+    pub fn new() -> Self {
+        Ship { 
+            velocity: Vec2 {x: 0.0, y: 0.1 }, 
+            angular: 0.0,
+            future_path: Vec::new()
+        }
+    }
 }
 
 fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
@@ -33,9 +44,9 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     let engine_flame: Handle<Image> = asset_server.load("engine_flame.png");
     //let path_pip: Handle<Image> = asset_server.load("circle.png");
 
-    //assemble the ship
+    //assemble the ship entity
     let _ship = commands.spawn((
-        Ship { velocity: Vec2 {x: 0.0, y: 0.1 }, angular: 0.01 },
+        Ship::new(),
         Sprite { image: ship_image, custom_size: Some(Vec2::splat(8.)), ..default() },
         Transform::from_xyz(0.0, 0.0, 1.0)
     ))
@@ -74,21 +85,39 @@ fn update_ship(
         return;
     };
 
-    //calculate the velocity gravitational attraction produces at this point in space
-    let new_velocity = 
-        stellar_core::navigation::calculate_acceleration(&transform.translation.xy(), &bodies_query.iter().collect())
-             + ship.velocity; //and add it to the current velocity
+    let path_length = 50;
 
+    let mut points: Vec<Vec2> = Vec::new();
+    let mut current_point = transform.translation.xy();
+    let mut current_velocity = ship.velocity;
+
+    for i in 0..path_length {
+        // Calculate the new velocity based on gravitational attraction
+        let new_velocity = 
+            stellar_core::navigation::calculate_acceleration(&current_point, &bodies_query.iter().collect())
+            + current_velocity; // Add it to the current velocity
+
+        //on the first run, update the ship values.
+        if i == 0 {
+            transform.translation.x += new_velocity.x;
+            transform.translation.y += new_velocity.y;
+
+            ship.velocity = new_velocity;
+        }
+
+        //update velocity and points
+        current_velocity = new_velocity;
+        current_point += new_velocity;
+        //push the position to the vec
+        points.push(current_point);
+    }
     transform.rotation *= Quat::from_rotation_z(ship.angular);
-
-    transform.translation.x += new_velocity.x;
-    transform.translation.y += new_velocity.y;
-
-    ship.velocity = new_velocity;
+    ship.future_path = points;
 }
 
 fn ship_controls(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
+    //keyboard: Res<ButtonInput<KeyCode>>,
     mut ship_query: Query<(&mut Ship, &mut Transform)>,
     mut engines: Query<&mut EngineFlame, Without<Ship>>,
     q_windows: Query<&Window, With<bevy::window::PrimaryWindow>>
@@ -153,6 +182,10 @@ fn ship_controls(
     }
     else {
         engines.iter_mut().find(|e| e.id == 0).map(|mut e| e.active = false);
+    }
+
+    if mouse_buttons.just_pressed(MouseButton::Middle) {
+        dbg!(transform.translation);
     }
 
 }

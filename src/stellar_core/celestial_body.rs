@@ -13,19 +13,31 @@ impl Plugin for SolarPlugin {
 
 fn setup_solar_system(
     mut commands: Commands, 
-    images: ResMut<Assets<Image>>,
-    //asset_server : Res<AssetServer>
+    mut images: ResMut<Assets<Image>>,
 ) {
-    let planet_image = gen::generate_planet_texture(32, 32, images);
-    let planet = gen::generate_planet(
-        5.9e16, 1e30, 551500.0, 1.0, 1.0);
-    let radius = planet.radius as f32;
+
+    let mut gen_p = |m, s, d, f, mg, x, y| {
+        let planet = gen::generate_planet(m, s, d, f, mg);
+        let radius = planet.radius;
+        let tex_size = radius as u32 / 100;
+
+        dbg!(radius);
+
+        return (
+            planet,
+            Sprite { 
+                image: gen::generate_planet_texture(tex_size, tex_size, &mut images), 
+                custom_size: Some(Vec2::splat(radius as f32)),
+                ..default()
+            },
+            Transform::from_xyz(x, y, 0.0)
+        );
+    };
     
-    commands.spawn((
-        planet,
-        Sprite { image: planet_image, custom_size: Some(Vec2::splat(radius)), ..default() },
-        Transform::from_xyz(1000.0, 0.0, 0.0)
-        ));
+    commands.spawn(gen_p(5.9e16, 1e30, 551500.0, 1.0, 1.0, 0.0, 0.0));
+    commands.spawn(gen_p(1e15, 1e30, 551500.0, 1.0, 1.0, 4000.0, 12000.0));
+
+
 }
 
 fn update_solar_system(_bodies: Query<&mut CelestialBody>, mut _gizmos: Gizmos) {

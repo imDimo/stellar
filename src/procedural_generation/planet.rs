@@ -13,7 +13,7 @@
 
 //use crate::stellar_core;
 use crate::stellar_core::celestial_body::CelestialBody as CelestialBody;
-use bevy::{prelude::*, render::render_resource::{Extent3d, TextureDimension}};
+use bevy::prelude::*;
 
 use rand_distr::{Distribution, Normal};
 
@@ -65,7 +65,7 @@ pub fn generate_planet(mass: f64, star_mass: f64, density: f64, solar_flux: f64,
 
     //albedo: depends on clouds, surface type, etc.
     let albedo = (0.1 + 0.2 * (1.0 - magnetic_field).clamp(0.0, 1.0)) * (1.0 - 0.2 * atmos_pressure.clamp(0.0, 5.0));
-    let equilibrium_temp = ((solar_flux * (1.0 - albedo)) / (4.0 * STEFAN_BOLTZMANN)).powf(0.25);
+    let _equilibrium_temp = ((solar_flux * (1.0 - albedo)) / (4.0 * STEFAN_BOLTZMANN)).powf(0.25);
 
     //solar day length: just increase with size
     let solar_day_length = 24.0 * (radius / EARTH_RADIUS).sqrt();
@@ -95,7 +95,7 @@ pub fn generate_planet(mass: f64, star_mass: f64, density: f64, solar_flux: f64,
         _ => "rocky with metallic core",
     };
 
-    dbg!((composition, radius, surface_gravity, escape_velocity, atmos_pressure, albedo, temp, equilibrium_temp, tectonic_activity, habitability, orbital_period, semi_major_axis));
+    //dbg!((composition, radius, surface_gravity, escape_velocity, atmos_pressure, albedo, temp, _equilibrium_temp, tectonic_activity, habitability, orbital_period, semi_major_axis));
 
     //CelestialBody { ..default() }
     return CelestialBody { 
@@ -127,33 +127,39 @@ fn calculate_orbital_period(semi_major_axis: f64, mass_star: f64, mass_planet: f
     return (numerator / denominator).sqrt();
 }
 
-pub fn generate_planet_texture(width: i32, height: i32, mut images: ResMut<Assets<Image>>) -> Handle<Image> {
-    let mut tex = Image::new_fill(
-        Extent3d { width: width as u32, height: height as u32, depth_or_array_layers: 1 }, 
-        TextureDimension::D2,
-        &[0, 0, 0, 0],
-        bevy::render::render_resource::TextureFormat::Rgba32Uint,
-        bevy::asset::RenderAssetUsages::RENDER_WORLD | bevy::asset::RenderAssetUsages::MAIN_WORLD
-    );
+//this is where tex gen will live. For now, simple orange outline.
+pub fn generate_planet_texture(width: u32, height: u32, images: &mut ResMut<Assets<Image>>) -> Handle<Image> {
 
-    let c_x = width / 2;
-    let c_y = height / 2;
+    //create an image buffer
+    let mut imgbuf: image::ImageBuffer<image::Rgba<u8>, Vec<u8>> = 
+        image::ImageBuffer::new(width, height);
 
-    let d_s = |x: i32, y: i32| { 
-        (x - c_x).pow(2) + (y - c_y).pow(2)
-    };
+    //calculate center and radius of circle
+    let radius = width as f32 / 2.0;
+    let c_x = width as f32 / 2.0;
+    let c_y = height as f32 / 2.0;
 
-    for y in 0..tex.height() as i32 {
-        for x in 0..tex.width() as i32 {
-            if d_s(x, y) == c_x.pow(2) {
-                let p = (y * width + x) as usize;
-                tex.data[p] = 255;
-                tex.data[p + 1] = 165;
-                tex.data[p + 2] = 0;
-                tex.data[p + 3] = 255;
-            }
+    //iterate thru all pixels
+    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+        //get squared distance from the center
+        let distance_squared = (x as f32 - c_x).powi(2) + (y as f32 - c_y).powi(2);
+
+        //if it falls in this small range, then color it whatever color
+        if distance_squared >= (radius - 1.0).powi(2) && distance_squared <= radius.powi(2) {
+            *pixel = image::Rgba([255, 165, 0, 255]);
         }
     }
 
-    return images.add(tex);
+    //convert the image::Image into bevy_image::image::Image via image::DynamicImage
+    //lol
+    let img = Image::from_dynamic(
+        image::DynamicImage::ImageRgba8(imgbuf),
+        false,
+        bevy::asset::RenderAssetUsages::RENDER_WORLD | bevy::asset::RenderAssetUsages::MAIN_WORLD
+    );
+    //lastly add it to the thing 
+    let img_handle = images.add(img);
+
+    //to get the thing
+    return img_handle;
 }
