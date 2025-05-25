@@ -12,11 +12,12 @@ pub struct ShipPlugin;
 impl Plugin for ShipPlugin {
     fn build(&self, app: &mut App) {
         app
+            .add_plugins((
+                thruster::ThrusterPlugin,
+            ))
             .add_systems(Startup, setup_ship)
             .add_systems(Update, update_ship)
-            .add_systems(Update, EngineFlame::update_thrusters)
             .add_systems(Update, ship_controls)
-            //.add_systems(Update, ShipPath::update)
             ;
     }
 }
@@ -40,34 +41,37 @@ impl Ship {
 
 fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     //load textures
-    let ship_image: Handle<Image> = asset_server.load("ship.png");
+    let ship_image: Handle<Image> = asset_server.load("ship2.png");
     let engine_flame: Handle<Image> = asset_server.load("engine_flame.png");
     //let path_pip: Handle<Image> = asset_server.load("circle.png");
 
     //assemble the ship entity
     let _ship = commands.spawn((
         Ship::new(),
-        Sprite { image: ship_image, custom_size: Some(Vec2::splat(8.)), ..default() },
-        Transform::from_xyz(0.0, 0.0, 1.0)
+        Sprite { image: ship_image, custom_size: Some(Vec2::splat(10.)), ..default() },
+        Transform::from_xyz(0.0, 0.0, 1.0),
+        //Curve()
     ))
     .with_child( //the engine flame is a child because it allows custom placement of the plume
-        thruster::EngineFlame::new(&engine_flame, 0,
+        EngineFlame::new(&engine_flame, 0, //main engine
             Transform::from_xyz(-6.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(1.5 * PI))
             .with_scale(Vec3 { x: 0.8, y: 4.0, z: 1.0 })
     ))
     .with_child(
-        thruster::EngineFlame::new(&engine_flame, 1,
+        EngineFlame::new(&engine_flame, 1, //port 
             Transform::from_xyz(2.0, 3.0, 0.0)
             .with_rotation(Quat::from_rotation_z(0.5 * PI + 0.3))
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
     ))
     .with_child(
-        thruster::EngineFlame::new(&engine_flame, 2,
+        EngineFlame::new(&engine_flame, 2, //starboard
             Transform::from_xyz(2.0, -3.0, 0.0)
             .with_rotation(Quat::from_rotation_z(0.5 * PI - 0.3))
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
-    )).id()
+    ))
+    
+    .id()
     ;
 
     //commands.entity(ship).insert((ShipPath::new(5, &path_pip)));
@@ -117,7 +121,7 @@ fn update_ship(
 
 fn ship_controls(
     mouse_buttons: Res<ButtonInput<MouseButton>>,
-    //keyboard: Res<ButtonInput<KeyCode>>,
+    keyboard: Res<ButtonInput<KeyCode>>,
     mut ship_query: Query<(&mut Ship, &mut Transform)>,
     mut engines: Query<&mut EngineFlame, Without<Ship>>,
     q_windows: Query<&Window, With<bevy::window::PrimaryWindow>>
@@ -125,29 +129,30 @@ fn ship_controls(
     let Ok((mut ship, transform)) = ship_query.get_single_mut() else { return };
     let Ok(window) = q_windows.get_single() else { return };
 
-    if mouse_buttons.pressed(MouseButton::Right) {
+    let mut button_pressed = false;
+    let mut toggle_engine = |id: i32, state| {
+        button_pressed = true;
         for mut e in engines.iter_mut() {
-            if e.id > 0 {
-                e.active = true;
+            if e.id == id {
+                e.active = state;
             }
         }
+    };
+
+    if mouse_buttons.pressed(MouseButton::Right) {
+        toggle_engine(1, true);
+        toggle_engine(2, true);
 
         ship.angular *= 0.95;
         ship.velocity *= 0.95;
     }
-    else {
-        for mut e in engines.iter_mut() {
-            if e.id > 0 {
-                e.active = false;
-            }
-        }
-    }
 
     if mouse_buttons.pressed(MouseButton::Left) {
-        engines.iter_mut().find(|e| e.id == 0).map(|mut e| e.active = true);
 
-        //unpack this safely incase user does something like click then drag mouse outside of the window.
+        //unpack this 'safely' incase user does something like click then drag mouse outside of the window.
         let Some(cursor_pos) = window.cursor_position() else { return };
+
+        toggle_engine(0, true);
 
         let world_pos = 
             transform.translation.xy() + cursor_pos - window.size() / 2.0;
@@ -180,12 +185,28 @@ fn ship_controls(
             ship.angular = angle_diff * 0.1;
         }
     }
-    else {
-        engines.iter_mut().find(|e| e.id == 0).map(|mut e| e.active = false);
-    }
 
     if mouse_buttons.just_pressed(MouseButton::Middle) {
         dbg!(transform.translation);
     }
+
+    if keyboard.pressed(KeyCode::KeyQ) {
+        ship.angular += 0.002;
+
+        toggle_engine(1, true);
+    }
+
+    if keyboard.pressed(KeyCode::KeyE) {
+        ship.angular -= 0.002;
+
+        toggle_engine(2, true);
+    }
+
+    if !button_pressed {
+        for mut e in engines.iter_mut() {
+                e.active = false;
+        }
+    }
+
 
 }

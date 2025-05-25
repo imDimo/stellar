@@ -1,6 +1,14 @@
 use bevy::prelude::*;
 use crate::stellar_core;
 
+pub struct ThrusterPlugin;
+impl Plugin for ThrusterPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Update, EngineFlame::update_thrusters)
+        ;
+    }
+}
+
 #[derive(Component)]
 pub struct EngineFlame {
     pub id: i32,
