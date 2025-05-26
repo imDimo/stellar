@@ -2,11 +2,11 @@ use bevy::prelude::*;
 use crate::stellar_core;
 
 mod thruster;
-//mod path;
+mod path;
 
 use core::f32::consts::PI as PI;
 use thruster::EngineFlame as EngineFlame;
-//use path::ShipPath as ShipPath;
+use path::ShipPath as ShipPath;
 
 pub struct ShipPlugin;
 impl Plugin for ShipPlugin {
@@ -14,6 +14,7 @@ impl Plugin for ShipPlugin {
         app
             .add_plugins((
                 thruster::ThrusterPlugin,
+                ShipPath,
             ))
             .add_systems(Startup, setup_ship)
             .add_systems(Update, update_ship)
@@ -89,11 +90,11 @@ fn update_ship(
         return;
     };
 
-    let path_length = 50;
-
     let mut points: Vec<Vec2> = Vec::new();
     let mut current_point = transform.translation.xy();
     let mut current_velocity = ship.velocity;
+
+    let path_length = 200;
 
     for i in 0..path_length {
         // Calculate the new velocity based on gravitational attraction

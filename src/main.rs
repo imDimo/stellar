@@ -1,16 +1,11 @@
 use bevy::prelude::*;
+use bevy_prototype_lyon::prelude::*;
 
 mod stellar_core;
 mod procedural_generation;
 mod game;
 
-//use procedural_generation::planet::generate_planet as p;
-
 fn main() {
-
-    for _ in 0..15 {
-        //p(6.0e24, 1e200, 5515.0, 1.0, 1.0);
-    }
 
     App::new()
         .add_plugins((
@@ -25,6 +20,7 @@ fn main() {
                     ..Default::default()
                 })
                 .set(ImagePlugin::default_nearest()),
+                ShapePlugin,
                 game::GamePlugin,
 
             ))
@@ -34,8 +30,9 @@ fn main() {
 }
 
 fn set_window_icon(windows: NonSend<bevy::winit::WinitWindows>) {
-    // here we use the `image` crate to load our icon data from a png file
-    // this is not a very bevy-native solution, but it will do
+    //here we use the `image` crate to load our icon data from a png file
+    //this is not a very bevy-native solution, but it will do
+    //oh btw this doesn't work on linux ofc. there we can use .desktop files to set icons
     let (icon_rgba, icon_width, icon_height) = {
         let image = image::open("assets/icon.png")
             .expect("Failed to open icon path")
@@ -46,7 +43,7 @@ fn set_window_icon(windows: NonSend<bevy::winit::WinitWindows>) {
     };
     let icon = winit::window::Icon::from_rgba(icon_rgba, icon_width, icon_height).unwrap();
 
-    // do it for all windows
+    //do it for all windows
     for window in windows.windows.values() {
         window.set_window_icon(Some(icon.clone()));
     }
