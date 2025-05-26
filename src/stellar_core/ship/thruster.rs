@@ -1,8 +1,9 @@
 use bevy::prelude::*;
-use crate::stellar_core;
+use crate::stellar_core::lerp as lerp;
 
 pub struct ThrusterPlugin;
 impl Plugin for ThrusterPlugin {
+    //EngineFlame is not a unit struct, so we want to make a wrapper just for the plugin.
     fn build(&self, app: &mut App) {
         app.add_systems(Update, EngineFlame::update_thrusters)
         ;
@@ -27,10 +28,10 @@ impl EngineFlame {
     pub fn update_thrusters(mut thruster_query: Query<(&mut Transform, &EngineFlame)>) {
         for (_, (mut transform, engine_flame)) in thruster_query.iter_mut().enumerate() {
             if engine_flame.active == true {
-                transform.scale.y = stellar_core::lerp(transform.scale.y, 4.0 + rand::random_range(-1.0..1.0), 4.0);
+                transform.scale.y = lerp(transform.scale.y, 4.0 + rand::random_range(-1.0..1.0), 4.0);
             }
             else {
-                transform.scale.y = stellar_core::lerp(transform.scale.y, 0.0, 4.0);
+                transform.scale.y = lerp(transform.scale.y, 0.0, 4.0);
             }
         }
     }

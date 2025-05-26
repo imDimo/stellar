@@ -44,7 +44,6 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     //load textures
     let ship_image: Handle<Image> = asset_server.load("ship2.png");
     let engine_flame: Handle<Image> = asset_server.load("engine_flame.png");
-    //let path_pip: Handle<Image> = asset_server.load("circle.png");
 
     //assemble the ship entity
     let _ship = commands.spawn((

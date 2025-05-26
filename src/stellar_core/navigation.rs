@@ -11,7 +11,7 @@ pub fn calculate_acceleration(position: &Vec2, bodies: &Vec<(&CelestialBody, &be
     //start with zero accel
     let mut accel = Vec2::new(0.0,0.0);
 
-    //iterate through each body, adding the acceleration togethher.
+    //iterate through each body, adding the acceleration together.
     for body in bodies {
         accel += acceleration(
             &body.1.translation.xy(), 
@@ -23,7 +23,7 @@ pub fn calculate_acceleration(position: &Vec2, bodies: &Vec<(&CelestialBody, &be
     return accel;
 }
 
-//modified newton's. Ignores mass of one of the objects, and adds a repulsive force 
+//modified newton's. Ignores mass of one of the objects, and adds a repulsive force when close by
 pub fn acceleration(pos1: &Vec2, pos2: &Vec2, mass: f32, radius: f32) -> Vec2 {
     let delta_pos = pos1 - pos2;
 

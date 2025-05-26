@@ -11,6 +11,7 @@ impl Plugin for CameraPlugin {
     }
 }
 
+//todo: overhaul with 3D cameras for spicy planet renders
 fn setup_camera(mut commands: Commands) {
     commands.spawn((Camera2d, Camera { ..default() }));
 }
@@ -38,7 +39,7 @@ fn update_camera(
 }
 
 //freecam function
-#[allow(dead_code)]
+#[allow(dead_code)] // <= if not currently used, dont generate clippy warnings
 fn update_free_camera(
     mut camera_query: Query<&mut Transform, With<Camera2d>>, 
     input: Res<ButtonInput<KeyCode>>, 
@@ -60,7 +61,7 @@ fn update_free_camera(
         zoom *= 1.0 - ev.y / 10.0;
     }
 
-    //mouse drag to move camera. cheap & easy solution
+    //mouse drag to move camera. cheap & easy solution - not always pixel-perfect
     for ev in evr_motion.read() {
         if buttons.pressed(MouseButton::Left) {
             direction -= Vec3 {x: ev.delta.x / 8.0, y: -ev.delta.y / 8.0, z: direction.z };

@@ -113,14 +113,14 @@ pub fn generate_planet(mass: f64, star_mass: f64, density: f64, solar_flux: f64,
     };
 }
 
-// Function to calculate semi-major axis using Kepler's Third Law
+//function to calculate semi-major axis using Kepler's Third Law
 fn calculate_semi_major_axis(mass_planet: f64, mass_star: f64, orbital_period: f64) -> f64 {
     let numerator = (orbital_period.powi(2)) * G * (mass_star + mass_planet);
     let denominator = 4.0 * std::f64::consts::PI.powi(2);
     return (numerator / denominator).cbrt(); // Cube root to get the semi-major axis
 }
 
-// Function to determine orbital period from semi-major axis and other parameters
+//function to determine orbital period from semi-major axis and other parameters
 fn calculate_orbital_period(semi_major_axis: f64, mass_star: f64, mass_planet: f64) -> f64 {
     let numerator = (semi_major_axis.powi(3)) * 4.0 * std::f64::consts::PI.powi(2);
     let denominator = G * (mass_star + mass_planet);

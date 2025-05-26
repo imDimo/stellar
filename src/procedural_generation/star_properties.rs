@@ -1,9 +1,11 @@
 
-#[allow(dead_code)]
+#[allow(dead_code)]     //shut clippy up for testing
 pub fn get_star_properties(mass: f32, age: f32, metallicity: f32) -> (f32, f32, f32, f32, String)
 {
     let lifespan = 10.0 / mass.powf(2.5);
 
+    //stars are main sequence for 90% of their lifetime. last 10% is just red giant
+    //then beyond that its remnants, and before, it'll be a protostar.
     match age / lifespan {
         x if x < 0.0 => get_protostar_properties(mass, age, metallicity),
         x if (0.0..0.9).contains(&x) => get_main_sequence_properties(mass, age, metallicity),
@@ -14,34 +16,35 @@ pub fn get_star_properties(mass: f32, age: f32, metallicity: f32) -> (f32, f32, 
 }
 
 fn get_protostar_properties(mass: f32, _age: f32, metallicity: f32) -> (f32, f32, f32, f32, String) {
-        //mass in solar masses. age in GY. metallicity in solar units
+    //mass in solar masses. age in GY. metallicity in solar units
 
-        let radius = mass.powf(0.95);
+    let radius = mass.powf(0.95);
 
-        let lifespan_modifier = 1.0 - (metallicity - 1.0) * 0.1;
-        let lifespan = 10000000000.0 / mass.powf(2.5) * lifespan_modifier;
-    
-        //in solar units
-        let luminosity_modifier = 0.8 - (metallicity - 1.0) * 0.1;
-        let luminosity = match mass {
-            x if (0.0..0.43).contains(&x) => 0.23 * mass.powf(2.3),
-            x if (0.43..2.0).contains(&x) => mass.powf(4.0),
-            x if (2.0..20.0).contains(&x) => 1.5 * mass.powf(3.5),
-            x if x >  20.0 => 3200.0 * mass,
-            _ => 0.0
-        } * luminosity_modifier;
-    
-        //in kelvin
-        let temperature_modifier = 0.8 - (metallicity - 1.0) * 0.05;
-        let temperature = (luminosity / radius.powi(2)).powf(0.25) * 5772.0 * temperature_modifier;
-    
-        let spectral_type: String = match temperature {
-            x if (10000..40000).contains(&(x as i32)) && mass > 1.8 => "HAeBe".to_string(),
-            x if (0..10000).contains(&(x as i32)) => "TT".to_string(),
-            _ => "X".to_string()
-        };
-    
-        return (radius, luminosity, temperature, lifespan, spectral_type);
+    let lifespan_modifier = 1.0 - (metallicity - 1.0) * 0.1;
+    let lifespan = 10000000000.0 / mass.powf(2.5) * lifespan_modifier;
+
+    //in solar units
+    let luminosity_modifier = 0.8 - (metallicity - 1.0) * 0.1;
+    let luminosity = match mass {
+        x if (0.0..0.43).contains(&x) => 0.23 * mass.powf(2.3),
+        x if (0.43..2.0).contains(&x) => mass.powf(4.0),
+        x if (2.0..20.0).contains(&x) => 1.5 * mass.powf(3.5),
+        x if x >  20.0 => 3200.0 * mass,
+        _ => 0.0
+    } * luminosity_modifier;
+
+    //in kelvin
+    let temperature_modifier = 0.8 - (metallicity - 1.0) * 0.05;
+    let temperature = (luminosity / radius.powi(2)).powf(0.25) * 5772.0 * temperature_modifier;
+
+    //this should be overhauled as type should not depend solely on temperature
+    let spectral_type: String = match temperature {
+        x if (10000..40000).contains(&(x as i32)) && mass > 1.8 => "HAeBe".to_string(),
+        x if (0..10000).contains(&(x as i32)) => "TT".to_string(),
+        _ => ".".to_string()
+    };
+
+    return (radius, luminosity, temperature, lifespan, spectral_type);
 }
 
 fn get_main_sequence_properties(mass: f32, age: f32, metallicity: f32) -> (f32, f32, f32, f32, String) {
@@ -113,40 +116,42 @@ fn get_giant_properties(mass: f32, age: f32, metallicity: f32) -> (f32, f32, f32
 
 fn get_remnant_properties(mass: f32, _age: f32, _metallicity: f32) -> (f32, f32, f32, f32, String) {
 
-    let const_g = 0.000000000066743; //gravitational constant
-    let const_c: f32 = 299792458.0; //m/s - speed of light
-    let hbar = 1.0545718e-34; // Reduced Planck constant (J s)
-    let k_b = 1.380649e-23; // Boltzmann constant (J/K)
+    //love to see these 4 constants together, because it means funky shit goes down
+    let const_g = 0.000000000066743;    //gravitational constant
+    let const_c: f32 = 299792458.0;          //m/s - speed of light
+    let hbar = 1.0545718e-34;           // Reduced Planck constant (J s)
+    let k_b = 1.380649e-23;             // Boltzmann constant (J/K)
 
     let remnant_type = match mass {
-        x if x > 3.0 => "BH",
-        x if (1.4..3.1).contains(&x) => "NS",
-        _ => "WD"
+        x if x > 3.0 => "BH",                       //black hole
+        x if (1.4..3.1).contains(&x) => "NS",  //neutron star
+        _ => "WD"                                        //white dwarf
     };
 
     let radius = match remnant_type {
         "BH" => (2.0 * const_g * mass) / const_c.powi(2), //schwarzchild radius
-        "NS" => 0.001 * mass,
+        "NS" => 0.001 * mass, //overhaul needed - neutron stars shrink as mass increases.
         _ => 0.015 * mass
     };
 
     let temperature = match remnant_type {
+        //hawking radiation!
         "BH" => (hbar * const_c.powi(2)) / (8.0 * std::f32::consts::PI * const_g * mass / 2.0e30 * k_b),
         "NS" => 1000000.0 - 100000.0 * (mass / 1.0),
         _ => 10000.0 - 500.0 * (mass / 1.0)
     };
 
     let luminosity = match remnant_type {
-        "BH" => 0.0, //it doesnt glow obv
-        _ => temperature * radius
+        "BH" => 0.0, //it should glow at hawking temp but its wholly negligible
+        _ => temperature * radius //ayy
     };
 
-    let lifespan = std::f32::MAX;
+    let lifespan = std::f32::MAX; //lifespan becomes irrelevant here
 
     let spectral_type = match remnant_type {
-        "BH" => 'X',
-        "NS" => 'N',
-        _ => 'W'
+        "BH" => 'X',    //black hole
+        "NS" => 'N',    //neutron star
+        _ => 'W'        //white dwarf
     };
 
     return (radius, luminosity, temperature, lifespan, spectral_type.to_string());
