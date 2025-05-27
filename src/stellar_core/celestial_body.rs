@@ -1,14 +1,25 @@
+pub mod satellite;
+pub mod orbit;
 
 use bevy::prelude::*;
-use crate::procedural_generation::planet as gen;
+use orbit::Orbit;
+use satellite::Satellite;
 
-pub struct SolarPlugin;
-impl Plugin for SolarPlugin {
+use crate::procedural_generation::gen_planet as gen;
+
+pub struct SolarSystemPlugin;
+impl Plugin for SolarSystemPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Startup, setup_solar_system)
             .add_systems(Update, update_solar_system);
     }
+}
+
+#[derive(Component, Debug)]
+pub struct SolarSystem {
+    //this is where i gotta define the recursive structure which will define every solar system.
+    //oof...
 }
 
 fn setup_solar_system(
@@ -40,13 +51,13 @@ fn setup_solar_system(
 
 }
 
-fn update_solar_system(_bodies: Query<&mut CelestialBody>, mut _gizmos: Gizmos) {
+fn update_solar_system(_bodies: Query<&mut Planet>, mut _gizmos: Gizmos) {
 
 }
 
 #[allow(dead_code)]
 #[derive(Clone, Component, Debug)]
-pub struct CelestialBody {
+pub struct Planet {
     pub mass: f64,
     pub density: f64,
     pub radius: f64,
@@ -58,11 +69,12 @@ pub struct CelestialBody {
     pub magnetic_field_strength: f64,
     pub tectonic_activity: String,
     pub habitability: f64,
+    pub orbit: Orbit,
 }
 
-impl Default for CelestialBody {
+impl Default for Planet {
     fn default() -> Self {
-        CelestialBody { 
+        Planet { 
             mass: 0.0, 
             density: 0.0, 
             radius: 0.0, 
@@ -73,7 +85,18 @@ impl Default for CelestialBody {
             atmosphere_composition: vec![], 
             magnetic_field_strength: 0.0, 
             tectonic_activity: "".to_string(), 
-            habitability: 0.0 
+            habitability: 0.0,
+            orbit: Orbit::default()
         }
+    }
+}
+
+impl Satellite for Planet {
+    fn get_orbit(self: &Self) -> Orbit {
+        self.orbit
+    }
+
+    fn set_orbit(self: &mut Self, orbit: Orbit) {
+        self.orbit = orbit;
     }
 }

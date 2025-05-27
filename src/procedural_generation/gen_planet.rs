@@ -11,8 +11,8 @@
     "Lava World - A protoplanet, perhaps too close to a star.",
 */
 
-//use crate::stellar_core;
-use crate::stellar_core::celestial_body::CelestialBody as CelestialBody;
+use crate::stellar_core::celestial_body::Planet;
+use crate::stellar_core::celestial_body::orbit::Orbit;
 use bevy::prelude::*;
 
 use rand_distr::{Distribution, Normal};
@@ -23,7 +23,7 @@ const EARTH_GRAVITY: f64 = 9.7803267715;
 const STEFAN_BOLTZMANN: f64 = 5.670374419e-8;
 const G: f64 = 6.6743015e-11;
 
-pub fn generate_planet(mass: f64, star_mass: f64, density: f64, solar_flux: f64, magnetic_field: f64) -> CelestialBody {
+pub fn generate_planet(mass: f64, star_mass: f64, density: f64, solar_flux: f64, magnetic_field: f64) -> Planet {
 
     //in meters
     let radius = f64::powf((3.0 * mass) / (4.0 * core::f64::consts::PI * density), 1.0 / 3.0);
@@ -98,7 +98,7 @@ pub fn generate_planet(mass: f64, star_mass: f64, density: f64, solar_flux: f64,
     //dbg!((composition, radius, surface_gravity, escape_velocity, atmos_pressure, albedo, temp, _equilibrium_temp, tectonic_activity, habitability, orbital_period, semi_major_axis));
 
     //CelestialBody { ..default() }
-    return CelestialBody { 
+    return Planet { 
         mass: mass, 
         density: density, 
         radius: radius, 
@@ -109,7 +109,8 @@ pub fn generate_planet(mass: f64, star_mass: f64, density: f64, solar_flux: f64,
         atmosphere_composition: vec![(composition.to_string(), 1.0)], 
         magnetic_field_strength: magnetic_field, 
         tectonic_activity: tectonic_activity.to_string(), 
-        habitability: habitability 
+        habitability: habitability,
+        orbit: Orbit::default()
     };
 }
 

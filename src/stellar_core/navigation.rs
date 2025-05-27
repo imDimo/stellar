@@ -1,12 +1,12 @@
 use core::f32;
 
 use bevy::prelude::*;
-use super::celestial_body::CelestialBody;
+use super::celestial_body::Planet;
 
 pub const G: f32 = 6.6743015e-11;
 
 //calculate the total acceleration at a given position from a vec of celestial bodies.
-pub fn calculate_acceleration(position: &Vec2, bodies: &Vec<(&CelestialBody, &bevy::prelude::Transform)>) -> Vec2 {
+pub fn calculate_acceleration(position: &Vec2, bodies: &Vec<(&Planet, &bevy::prelude::Transform)>) -> Vec2 {
 
     //start with zero accel
     let mut accel = Vec2::new(0.0,0.0);
