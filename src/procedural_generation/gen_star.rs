@@ -3,9 +3,9 @@ use crate::stellar_core::celestial_body::{star::Star, orbit::Orbit};
 pub fn generate_star(kilo_mass: f64, age: f64, metallicity: f64) -> Star
 {
     let mass = dbg!(kilo_mass / 2e30);
-    let lifespan = dbg!(10.0 / kilo_mass.powf(2.5));
+    let lifespan = dbg!(10.0 / mass.powf(2.5) * 1e10);
 
-    dbg!((age, lifespan, age / lifespan));
+    //dbg!((age, lifespan, age / lifespan));
 
     //stars are main sequence for 90% of their lifetime. last 10% is just red giant
     //then beyond that its remnants, and before, it'll be a protostar.
