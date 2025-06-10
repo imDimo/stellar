@@ -12,7 +12,7 @@ pub fn test_gen_system() {
     gen_system(seed);
 }
 
-pub fn gen_system(seed: &str) -> (Vec<Star>, Vec<Planet>){
+pub fn gen_system(seed: &str) -> (Vec<Star>, Vec<Planet>) {
 
     //convert seed to a vec of bytes
     let mut nr = Vec::<u8>::new();
@@ -57,14 +57,14 @@ pub fn gen_system(seed: &str) -> (Vec<Star>, Vec<Planet>){
                 //index + 0: the 'number of stars'
                 //index + 1: starting point for the star data
                 //* 3: change 3 to the amount of parameters to pull out. Currently star()
-                //takes 3 params (kilo_mass, age, metallicity) but if this changes this needs to be updated.
+                //takes 3 params (solar_mass, age, metallicity) but if this changes this needs to be updated.
                 //sidenote: maybe this is possible with macros?
                 let base = index + 1 + i * 3;
 
                 //NEED TO ADJUST THESE!! my stars keep exploding!
                 stars.push(star(
-                    get_rand_mass(0.01, 1.0, nth(index)) * 1e25,
-                    get_rand_mass(0.01, 1.0,nth(base + 1)) * 1e4,
+                    nth(base),
+                    nth(base + 1),
                     nth(base + 2) / 10.0,
                 ));
             }
@@ -89,8 +89,8 @@ pub fn gen_system(seed: &str) -> (Vec<Star>, Vec<Planet>){
     dbg!(seed_nr);
 
     //idk change this to true to see a printout of the entire system
-    if false {
-        dbg!((stars, planets))
+    if true {
+        (dbg!(stars), planets)
     }
     else {
         (stars, planets)

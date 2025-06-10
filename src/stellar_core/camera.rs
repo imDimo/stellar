@@ -7,7 +7,7 @@ impl Plugin for CameraPlugin {
         //build plugin & add systems
         app
             .add_systems(Startup, setup_camera)
-            .add_systems(Update, update_camera);
+            .add_systems(Update, update_free_camera);
     }
 }
 

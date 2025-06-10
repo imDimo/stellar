@@ -1,30 +1,24 @@
 use crate::stellar_core::celestial_body::{star::Star, orbit::Orbit};
 
-pub fn generate_star(kilo_mass: f64, age: f64, metallicity: f64) -> Star
+pub fn generate_star(solar_mass: f64, age_gy: f64, metallicity: f64) -> Star
 {
-    let mass = dbg!(kilo_mass / 2e30);
-    let lifespan = dbg!(10.0 / mass.powf(2.5) * 1e10);
-
-    //dbg!((age, lifespan, age / lifespan));
+    let lifespan = 10.0 / solar_mass.powf(2.5);
 
     //stars are main sequence for 90% of their lifetime. last 10% is just red giant
     //then beyond that its remnants, and before, it'll be a protostar.
     let (radius, luminosity, temperature, lifespan, spectral_type) = 
-    match age / lifespan {
-        x if x < 0.0 => get_protostar_properties(mass, age, metallicity),
-        x if (0.0..0.9).contains(&x) => get_main_sequence_properties(mass, age, metallicity),
-        x if (0.9..1.0).contains(&x) => get_giant_properties(mass, age, metallicity),
-        x if x > 1.0 => get_remnant_properties(mass, age, metallicity),
-        _ => get_main_sequence_properties(mass, age, metallicity) //lol idk, fallback?
+    match age_gy / lifespan {
+        x if x < 0.0 => get_protostar_properties(solar_mass, age_gy, metallicity),
+        x if (0.0..0.9).contains(&x) => get_main_sequence_properties(solar_mass, age_gy, metallicity),
+        x if (0.9..1.0).contains(&x) => get_giant_properties(solar_mass, age_gy, metallicity),
+        x if x > 1.0 => get_remnant_properties(solar_mass, age_gy, metallicity),
+        _ => get_main_sequence_properties(solar_mass, age_gy, metallicity) //lol idk, fallback?
     };
 
-    dbg!((age, lifespan, age / lifespan));
-    dbg!(spectral_type.clone());
-
-    Star { mass, radius, luminosity, temperature, lifespan, spectral_type, orbit: Orbit::default() }
+    Star { mass: solar_mass, radius, luminosity, temperature, lifespan, spectral_type, orbit: Orbit::default() }
 }
 
-fn get_protostar_properties(mass: f64, _age: f64, metallicity: f64) -> (f64, f64, f64, f64, String) {
+fn get_protostar_properties(mass: f64, _age_gy: f64, metallicity: f64) -> (f64, f64, f64, f64, String) {
     //mass in solar masses. age in GY. metallicity in solar units
 
     let radius = mass.powf(0.95);
@@ -56,7 +50,7 @@ fn get_protostar_properties(mass: f64, _age: f64, metallicity: f64) -> (f64, f64
     return (radius, luminosity, temperature, lifespan, spectral_type);
 }
 
-fn get_main_sequence_properties(mass: f64, age: f64, metallicity: f64) -> (f64, f64, f64, f64, String) {
+fn get_main_sequence_properties(mass: f64, age_gy: f64, metallicity: f64) -> (f64, f64, f64, f64, String) {
     //mass in solar masses. age in GY. metallicity in solar units
 
     let radius = mass.powf(0.8);
@@ -65,7 +59,7 @@ fn get_main_sequence_properties(mass: f64, age: f64, metallicity: f64) -> (f64, 
     let lifespan = 10000000000.0 / mass.powf(2.5) * lifespan_modifier;
 
     //in solar units
-    let luminosity_modifier = 1.0 - (metallicity - 1.0) * 0.1 + (age - 5.0) * 0.01;
+    let luminosity_modifier = 1.0 - (metallicity - 1.0) * 0.1 + (age_gy - 5.0) * 0.01;
     let luminosity = match mass {
         x if (0.0..0.43).contains(&x) => 0.23 * mass.powf(2.3),
         x if (0.43..2.0).contains(&x) => mass.powf(4.0),
@@ -75,7 +69,7 @@ fn get_main_sequence_properties(mass: f64, age: f64, metallicity: f64) -> (f64, 
     } * luminosity_modifier;
 
     //in kelvin
-    let temperature_modifier = 1.0 - (metallicity - 1.0) * 0.05 + (age - 5.0) * 0.005;
+    let temperature_modifier = 1.0 - (metallicity - 1.0) * 0.05 + (age_gy - 5.0) * 0.005;
     let temperature = (luminosity / radius.powi(2)).powf(0.25) * 5772.0 * temperature_modifier;
 
     let spectral_type: char = match temperature {
@@ -95,16 +89,16 @@ fn get_main_sequence_properties(mass: f64, age: f64, metallicity: f64) -> (f64, 
     return (radius, luminosity, temperature, lifespan, spectral_type.to_string());
 }
 
-fn get_giant_properties(mass: f64, age: f64, metallicity: f64) -> (f64, f64, f64, f64, String) {
+fn get_giant_properties(mass: f64, age_gy: f64, metallicity: f64) -> (f64, f64, f64, f64, String) {
     
     let radius_base = 10.0 * (mass / 1.0).powf(0.3); // Base radius, scaled with mass
-    let radius = radius_base * (1.0 + 0.5 * (age / 10.0).powf(0.5)); // Age increases radius
+    let radius = radius_base * (1.0 + 0.5 * (age_gy / 10.0).powf(0.5)); // Age increases radius
 
     let luminosity_base = 100.0 * (mass / 1.0).powf(3.5); // Base luminosity
-    let luminosity = luminosity_base * (1.0 + 0.7 * (age / 10.0).powf(0.7)); // Age increases luminosity
+    let luminosity = luminosity_base * (1.0 + 0.7 * (age_gy / 10.0).powf(0.7)); // Age increases luminosity
 
     let temperature_base = 5000.0 - 100.0 * (mass / 1.0); // Base temperature, depends on mass
-    let temperature = temperature_base - 50.0 * (age / 10.0); // Age decreases temperature
+    let temperature = temperature_base - 50.0 * (age_gy / 10.0); // Age decreases temperature
 
     let lifespan_modifier = 1.0 - (metallicity - 1.0) * 0.1;
     let lifespan = 10000000000.0 / mass.powf(2.5) * lifespan_modifier;
@@ -123,7 +117,7 @@ fn get_giant_properties(mass: f64, age: f64, metallicity: f64) -> (f64, f64, f64
     return (radius, luminosity, temperature, lifespan, spectral_type.to_string());
 }
 
-fn get_remnant_properties(mass: f64, _age: f64, _metallicity: f64) -> (f64, f64, f64, f64, String) {
+fn get_remnant_properties(mass: f64, _age_gy: f64, _metallicity: f64) -> (f64, f64, f64, f64, String) {
 
     //love to see these 4 constants together, because it means funky shit goes down
     let const_g = 0.000000000066743;    //gravitational constant

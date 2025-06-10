@@ -7,17 +7,11 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_plugins(
-                (
+            .add_plugins((
                     camera::CameraPlugin,
                     ship::ShipPlugin,
                     celestial_body::SolarSystemPlugin,
                 )
-            )
-            .add_systems(Startup, setup_scene);
+            );
     }
-}
-
-fn setup_scene(mut _commands: Commands, mut gizmos: Gizmos) {
-    gizmos.circle_2d(Vec2::splat(0.0), 10.0 as f32, bevy::color::palettes::basic::WHITE);
 }

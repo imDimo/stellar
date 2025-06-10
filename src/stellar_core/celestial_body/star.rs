@@ -43,16 +43,16 @@ impl Star {
         star: Self, x: f32, y: f32, mut images: &mut ResMut<Assets<Image>>
     ) -> (Self, Sprite, Transform) {
         let radius = star.radius;
-        let tex_size = radius as u32 / 100;
+        let tex_size = (radius as u32 * 100).max(1);
 
         (
             star,
             Sprite { 
                 image: procedural_generation::circle_texture(tex_size, tex_size, &mut images), 
-                custom_size: Some(Vec2::splat(radius as f32)),
+                custom_size: Some(Vec2::splat((radius as f32 * 500.0).max(1000.0))),
                 ..default()
             },
-            Transform::from_xyz(x, y, 0.0).with_scale(Vec3::splat(0.051))
+            Transform::from_xyz(x, y, 0.0)
         )
 
     }
