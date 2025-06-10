@@ -39,7 +39,6 @@ fn update_camera(
 }
 
 //freecam function
-#[allow(dead_code)] // <= if not currently used, dont generate clippy warnings
 fn update_free_camera(
     mut camera_query: Query<&mut Transform, With<Camera2d>>, 
     input: Res<ButtonInput<KeyCode>>, 

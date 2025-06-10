@@ -1,11 +1,12 @@
 pub mod satellite;
 pub mod orbit;
+pub mod planet;
+pub mod star;
 
 use bevy::prelude::*;
-use orbit::Orbit;
-use satellite::Satellite;
+use planet::Planet;
 
-use crate::procedural_generation::gen_planet as gen;
+use crate::{procedural_generation::gen_system::gen_system, stellar_core::celestial_body::star::Star};
 
 pub struct SolarSystemPlugin;
 impl Plugin for SolarSystemPlugin {
@@ -16,37 +17,25 @@ impl Plugin for SolarSystemPlugin {
     }
 }
 
-#[derive(Component, Debug)]
-pub struct SolarSystem {
-    //this is where i gotta define the recursive structure which will define every solar system.
-    //oof...
-}
-
 fn setup_solar_system(
     mut commands: Commands, 
     mut images: ResMut<Assets<Image>>,
 ) {
 
-    let mut gen_p = |m, s, d, f, mg, x, y| {
-        let planet = gen::generate_planet(m, s, d, f, mg);
-        let radius = planet.radius;
-        let tex_size = radius as u32 / 100;
+    //todo: there is a bug where something crashes this. try different seeds
+    let (stars, planets) = gen_system("=a=b=c=");
 
-        dbg!(radius);
-
-        return (
-            planet,
-            Sprite { 
-                image: gen::generate_planet_texture(tex_size, tex_size, &mut images), 
-                custom_size: Some(Vec2::splat(radius as f32)),
-                ..default()
-            },
-            Transform::from_xyz(x, y, 0.0)
+    for (i, star) in stars.into_iter().enumerate() {
+        commands.spawn(
+            Star::get_bundle(star, i as f32 * 1000.0, 10.0, &mut images)
         );
-    };
-    
-    commands.spawn(gen_p(5.9e16, 1e30, 551500.0, 1.0, 1.0, 0.0, 0.0));
-    commands.spawn(gen_p(1e15, 1e30, 551500.0, 1.0, 1.0, 4000.0, 12000.0));
+    }
+
+    for (i, planet) in planets.into_iter().enumerate() {
+        commands.spawn(
+            Planet::get_bundle(planet, i as f32 * 1000.0, 1000.0, &mut images)
+        );
+    }
 
 
 }
@@ -55,48 +44,3 @@ fn update_solar_system(_bodies: Query<&mut Planet>, mut _gizmos: Gizmos) {
 
 }
 
-#[allow(dead_code)]
-#[derive(Clone, Component, Debug)]
-pub struct Planet {
-    pub mass: f64,
-    pub density: f64,
-    pub radius: f64,
-    pub surface_gravity: f64,
-    pub atmos_pressure: f64,
-    pub orbital_period: f64,
-    pub surface_temperature: f64,
-    pub atmosphere_composition: Vec<(String, f64)>,
-    pub magnetic_field_strength: f64,
-    pub tectonic_activity: String,
-    pub habitability: f64,
-    pub orbit: Orbit,
-}
-
-impl Default for Planet {
-    fn default() -> Self {
-        Planet { 
-            mass: 0.0, 
-            density: 0.0, 
-            radius: 0.0, 
-            surface_gravity: 0.0, 
-            atmos_pressure: 0.0, 
-            orbital_period: 0.0, 
-            surface_temperature: 0.0, 
-            atmosphere_composition: vec![], 
-            magnetic_field_strength: 0.0, 
-            tectonic_activity: "".to_string(), 
-            habitability: 0.0,
-            orbit: Orbit::default()
-        }
-    }
-}
-
-impl Satellite for Planet {
-    fn get_orbit(self: &Self) -> Orbit {
-        self.orbit
-    }
-
-    fn set_orbit(self: &mut Self, orbit: Orbit) {
-        self.orbit = orbit;
-    }
-}

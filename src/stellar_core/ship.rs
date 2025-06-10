@@ -53,19 +53,19 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
         //Curve()
     ))
     .with_child( //the engine flame is a child because it allows custom placement of the plume
-        EngineFlame::new(&engine_flame, 0, //main engine
+        EngineFlame::get_bundle(&engine_flame, 0, //main engine
             Transform::from_xyz(-6.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(1.5 * PI))
             .with_scale(Vec3 { x: 0.8, y: 4.0, z: 1.0 })
     ))
     .with_child(
-        EngineFlame::new(&engine_flame, 1, //port 
+        EngineFlame::get_bundle(&engine_flame, 1, //port 
             Transform::from_xyz(2.0, 3.0, 0.0)
             .with_rotation(Quat::from_rotation_z(0.5 * PI + 0.3))
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
     ))
     .with_child(
-        EngineFlame::new(&engine_flame, 2, //starboard
+        EngineFlame::get_bundle(&engine_flame, 2, //starboard
             Transform::from_xyz(2.0, -3.0, 0.0)
             .with_rotation(Quat::from_rotation_z(0.5 * PI - 0.3))
             .with_scale(Vec3 { x: 0.4, y: 0.8, z: 1.0 })
@@ -81,7 +81,8 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
 //process gravity for the ship
 fn update_ship(
     mut ship_query: Query<(&mut stellar_core::ship::Ship, &mut Transform)>, 
-    bodies_query: Query<(&stellar_core::celestial_body::Planet, &Transform), Without<stellar_core::ship::Ship>>
+    bodies_query: Query<(&stellar_core::celestial_body::planet::Planet, &Transform), Without<stellar_core::ship::Ship>>,
+    stars_query: Query<(&stellar_core::celestial_body::star::Star, &Transform), Without<stellar_core::ship::Ship>>
 ) {
     //unpack and error handle the tuple
     //this pattern isnt exactly necessary but its okay
@@ -98,7 +99,9 @@ fn update_ship(
     for i in 0..path_length {
         // Calculate the new velocity based on gravitational attraction
         let new_velocity = 
-            stellar_core::navigation::calculate_acceleration(&current_point, &bodies_query.iter().collect())
+            stellar_core::navigation::calculate_acceleration(
+                &current_point, &bodies_query.iter().collect(), &stars_query.iter().collect()
+            )
             + current_velocity; // Add it to the current velocity
 
         //on the first run, update the ship values.

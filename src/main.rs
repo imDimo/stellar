@@ -1,3 +1,7 @@
+#![allow(dead_code)]
+#![allow(unreachable_code)]
+//^ i found a super power clippy shutter-upper
+
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 

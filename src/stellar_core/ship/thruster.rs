@@ -17,7 +17,7 @@ pub struct EngineFlame {
 }
 
 impl EngineFlame {
-    pub fn new(engine_flame: &Handle<Image>, id: i32, transform: Transform) -> (EngineFlame, Sprite, Transform) {
+    pub fn get_bundle(engine_flame: &Handle<Image>, id: i32, transform: Transform) -> (EngineFlame, Sprite, Transform) {
         (
             EngineFlame { id, active: false },
             Sprite { image: engine_flame.clone(), custom_size: Some(Vec2::splat(6.0)), ..default() },

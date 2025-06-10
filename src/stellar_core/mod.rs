@@ -14,13 +14,11 @@ pub fn lerp(start: f32, end: f32, speed: f32) -> f32 {
 }
 
 //sigmoid
-#[allow(dead_code)]
 pub fn sigmoid(z: f32) -> f32 {
     return 1.0 / (1.0 + (-z).exp());
 }
 
 //sigmoid derivative
-#[allow(dead_code)]
 pub fn sigmoid_derivative(z: f32) -> f32 {
     let sigmoid_x = 1.0 / (1.0 + (-z).exp());
     return 0.25 - (0.25 - sigmoid_x) * (0.25 - sigmoid_x);
