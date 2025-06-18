@@ -1,14 +1,15 @@
 /*
     Note to self - these are the kinds of things this generator should be able to make:
 
-    "Earth-Like-World / Land Rivers - A terran like planet with land, rivers and clouds.",
-    "Ice World - Ice planet, with some water lakes, wind and clouds.",
-    "Terran Dry - A mars-like rocky planet, close to its star, dried out of any water.",
-    "Islands - Water planets covered in islands.",
-    "No atmosphere - Moons or planets not protected by atmosphere.",
-    "Gas Giant I - A cold planet, outside the frost line.",
-    "Gas Giant II - A cold planet, outside the frost line, variation.",
-    "Lava World - A protoplanet, perhaps too close to a star.",
+    "Earth-Like-World / Land Rivers - A terran like planet with land, rivers and clouds. Earth",
+    "Ice World - Ice planet, with some water lakes, wind and clouds. Hoth, MicroTech",
+    "Terran Dry - A mars-like rocky planet, close to its star, dried out of any water. Mars",
+    "Islands - Water planets covered in islands. Scarif",
+    "No atmosphere - Moons or planets not protected by atmosphere. Mercury, Pluto",
+    "Gas Giant I - A cold planet, outside the frost line. Jupiter/Saturn",
+    "Gas Giant II - A cold planet, outside the frost line, variation. Uranus/Neptune",
+    "Lava World - A protoplanet, perhaps too close to a star. Vulcan, Janssen/55 Cancri E",
+    "Sulfur World - A world more similar to hell than reality. Venus"
 */
 
 use crate::stellar_core::celestial_body::planet::Planet;

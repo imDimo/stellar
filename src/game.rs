@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::stellar_core::{camera, ship, celestial_body};
-//use crate::procedural_generation;
+use crate::ui;
 
 pub struct GamePlugin;
 impl Plugin for GamePlugin {
@@ -11,6 +11,7 @@ impl Plugin for GamePlugin {
                     camera::CameraPlugin,
                     ship::ShipPlugin,
                     celestial_body::SolarSystemPlugin,
+                    ui::info_ui::UIPlugin,
                 )
             );
     }

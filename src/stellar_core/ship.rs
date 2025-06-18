@@ -49,8 +49,7 @@ fn setup_ship(mut commands: Commands, asset_server : Res<AssetServer>) {
     let _ship = commands.spawn((
         Ship::new(),
         Sprite { image: ship_image, custom_size: Some(Vec2::splat(10.)), ..default() },
-        Transform::from_xyz(0.0, 0.0, 1.0),
-        //Curve()
+        Transform::from_xyz(100.0, 100.0, 1.0),
     ))
     .with_child( //the engine flame is a child because it allows custom placement of the plume
         EngineFlame::get_bundle(&engine_flame, 0, //main engine

@@ -40,15 +40,15 @@ pub fn gen_system(seed: &str) -> (Vec<Star>, Vec<Planet>) {
         //begin star phase
         if index == 0 {
             let star_amount = match digit {
-                0 | 1 | 2 | 3 => 1,
-                4 | 5 | 6 => 2,
+                0..=3 => 1,
+                4..=6 => 2,
                 7 | 8 => 3,
                 9 => 4,
                 _ => unreachable!() //heh
             };
 
             //for debugging, you can set this to a custom amount.
-            //star_amount = 1; 
+            //let star_amount = 1; 
             
             //now actually create the star structs.
             //todo: fix star parameter ranges!
@@ -63,7 +63,7 @@ pub fn gen_system(seed: &str) -> (Vec<Star>, Vec<Planet>) {
 
                 //NEED TO ADJUST THESE!! my stars keep exploding!
                 stars.push(star(
-                    nth(base),
+                    get_rand(0.1, 5.0, nth(base)),
                     nth(base + 1),
                     nth(base + 2) / 10.0,
                 ));
@@ -76,7 +76,7 @@ pub fn gen_system(seed: &str) -> (Vec<Star>, Vec<Planet>) {
             match digit {
                 6 => {}, //magic moon number, TODO add moons, TBC etc
                 _ => planets.push(planet(   //TODO tweak values and factors
-                    get_rand_mass(0.01, 1.0, nth(index + 1))  * 1e10,
+                    get_rand(1e10, 1e15, nth(index + 1)),
                     nth(index + 2) * 200.0 + 3000.0,
                     rand::rng().random(),
                     rand::rng().random(),
@@ -138,8 +138,8 @@ fn get_nr_from_str(seed: &str) -> u128 {
     numeric_str.parse::<u128>().unwrap_or(0)
 }
 
-fn get_rand_mass(min: f64, max: f64, seed: f64) -> f64 {
+fn get_rand(min: f64, max: f64, x: f64) -> f64 {
     //prototype for pseudo randomness, dont use
-    let x = f64::sin(seed) * 172410.0;
-    return (x - x.floor() * (max - min + 1.1) + min).abs();
+    let y = (x.sin() + 1.0) / 2.0;
+    return y * (max - min) + min;
 }
