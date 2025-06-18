@@ -23,7 +23,7 @@ fn setup_solar_system(
 ) {
 
     //todo: there is a bug where something crashes this. try different seeds
-    let (stars, planets) = gen_system("=a=b=cii");
+    let (stars, planets) = gen_system("meow kitty");
 
     for (i, star) in stars.into_iter().enumerate() {
         commands.spawn(

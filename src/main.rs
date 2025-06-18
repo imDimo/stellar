@@ -5,10 +5,11 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 
-use crate::procedural_generation::{gen_planet::generate_planet as planet, gen_star::generate_star as star};
+//use crate::procedural_generation::{gen_planet::generate_planet as planet, gen_star::generate_star as star};
 
 mod stellar_core;
 mod procedural_generation;
+mod ui;
 mod game;
 
 fn main() {
@@ -27,12 +28,12 @@ fn main() {
                 })
                 .set(ImagePlugin::default_nearest()),
                 ShapePlugin,
+                bevy::diagnostic::FrameTimeDiagnosticsPlugin::default(),
                 game::GamePlugin,
 
             ))
         .add_systems(Startup, set_window_icon)
         .run();
-
 }
 
 fn set_window_icon(windows: NonSend<bevy::winit::WinitWindows>) {
