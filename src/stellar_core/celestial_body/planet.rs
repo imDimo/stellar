@@ -61,7 +61,7 @@ impl Planet {
         (
             planet,
             Sprite { 
-                image: procedural_generation::circle_texture_color(
+                image: procedural_generation::circle_texture(
                     tex_size, tex_size, &mut images, 0, 225, 255, 255),
                 custom_size: Some(Vec2::splat(radius as f32)),
                 ..default()

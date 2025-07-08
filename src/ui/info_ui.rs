@@ -8,6 +8,7 @@ impl Plugin for UIPlugin {
         app
             .add_plugins(crate::ui::fps_ui::FPSUIPlugin)
             .add_plugins(crate::ui::cam_mode_ui::CamUIPlugin)
+            .add_plugins(crate::ui::coords_ui::CoordsUIPlugin)
         ;
     }
 }
