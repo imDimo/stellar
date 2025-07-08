@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use crate::stellar_core::camera::CamMode;
+use crate::stellar_core;
 
-//plugin to wrap bevy functionality
-pub struct CamUIPlugin;
-impl Plugin for CamUIPlugin {
+pub struct CoordsUIPlugin;
+impl Plugin for CoordsUIPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_systems(Startup, setup)
@@ -14,7 +13,7 @@ impl Plugin for CamUIPlugin {
 
 //marker struct to identify the span
 #[derive(Component)]
-struct CamModeUIMarker;
+struct CoordsUIMarker;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
@@ -25,12 +24,12 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     };
 
     commands.spawn((
-        Text::new("Cam (spacebar): "),
+        Text::new("Pos: "),
         font.clone(),
         TextLayout::new_with_justify(JustifyText::Center),
         Node {
             position_type: PositionType::Absolute,
-            bottom: Val::Px(30.0),
+            bottom: Val::Px(60.0),
             left: Val::Px(5.0),
             ..default()
         },
@@ -38,19 +37,19 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     .with_child((
         TextSpan::default(),
         font,
-        CamModeUIMarker
+        CoordsUIMarker
     ))
     ;
 
 }
 
 fn update(
-    mut query: Query<&mut TextSpan, With<CamModeUIMarker>>,
-    mode_query: Query<&CamMode, With<Camera2d>>
+    mut query: Query<&mut TextSpan, With<CoordsUIMarker>>,
+    ship_query: Query<&mut Transform, (With<stellar_core::ship::Ship>, Without<Camera2d>)>
 ) {
     for mut span in &mut query {
-        for mode in &mode_query {
-            **span = format!("{}", mode.get_str());
+        for ship in &ship_query {
+            **span = format!("X{0}, Y{1}", ship.translation.x as i32, ship.translation.y as i32);
         }
     }
 }

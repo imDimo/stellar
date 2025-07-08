@@ -48,7 +48,8 @@ impl Star {
         (
             star,
             Sprite { 
-                image: procedural_generation::circle_texture(tex_size, tex_size, &mut images), 
+                image: procedural_generation::circle_texture(
+                    tex_size, tex_size, &mut images, 0, 225, 255, 255),
                 custom_size: Some(Vec2::splat((radius as f32 * 500.0).max(1000.0))),
                 ..default()
             },
